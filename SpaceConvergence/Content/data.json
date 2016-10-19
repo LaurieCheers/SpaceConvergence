@@ -1,0 +1,22 @@
+{
+  "mouseOverGlow":{"texture":"mouseOverGlow", "draw":"stretched9grid", "padding":8},
+  "self":{
+    "homebase":{"art":"homebase", "cardType":["Home"]},
+	"hand":{"basePos":[100,350], "slotOffset":[100,0]},
+	"home":{"basePos":[100,50], "slotOffset":[0,80]},
+	"attack":{"basePos":[500,50], "slotOffset":[0,80]},
+	"startingLife":20,
+  },
+  "opponent":{
+    "homebase":{"art":"homebase", "cardType":["Home"]},
+	"hand":{"basePos":[100,350], "slotOffset":[100,0]},
+	"home":{"basePos":[600,50], "slotOffset":[0,80]},
+	"attack":{"basePos":[300,50], "slotOffset":[0,80]},
+	"startingLife":20,
+  },
+  "cards":
+  [
+	{"art":"clown", "cardType":["Unit"], "power":2, "shields":2},
+	{"art":"sniper", "cardType":["Unit"], "power":3, "shields":1},
+  ]
+}

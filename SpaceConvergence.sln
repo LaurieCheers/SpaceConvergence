@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpaceConvergence", "SpaceConvergence\SpaceConvergence.csproj", "{6C44CC1C-D4ED-4F60-8E44-54649C51AEAA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6C44CC1C-D4ED-4F60-8E44-54649C51AEAA}.Debug|x86.ActiveCfg = Debug|x86
+		{6C44CC1C-D4ED-4F60-8E44-54649C51AEAA}.Debug|x86.Build.0 = Debug|x86
+		{6C44CC1C-D4ED-4F60-8E44-54649C51AEAA}.Release|x86.ActiveCfg = Release|x86
+		{6C44CC1C-D4ED-4F60-8E44-54649C51AEAA}.Release|x86.Build.0 = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
