@@ -83,17 +83,28 @@ namespace SpaceConvergence
 
             self = new ConvergePlayer(data.getJSON("self"), Content);
             opponent = new ConvergePlayer(data.getJSON("opponent"), Content);
+            self.opponent = opponent;
+            opponent.opponent = self;
 
             ui = new UIContainer();
 
             ui.Add(new ConvergeUIObject(self.homeBase));
             ui.Add(new ConvergeUIObject(opponent.homeBase));
 
+            UIButtonStyle defaultStyle = UIButton.GetDefaultStyle(Content);
+            ui.Add(new UIButton("End Turn", new Rectangle(500, 400, 80, 40), defaultStyle, EndTurn_onPress));
+
             foreach(JSONTable cardTemplate in data.getArray("cards").asJSONTables())
             {
                 ConvergeObject handCard = new ConvergeObject(new ConvergeCardSpec(cardTemplate, Content), self.hand);
                 ui.Add(new ConvergeUIObject(handCard));
             }
+        }
+
+        public void EndTurn_onPress()
+        {
+            self.EndTurn();
+            self.BeginTurn();
         }
 
         /// <summary>

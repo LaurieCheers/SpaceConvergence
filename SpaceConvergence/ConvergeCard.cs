@@ -66,7 +66,7 @@ namespace SpaceConvergence
         public List<ConvergeObject> contents = new List<ConvergeObject>();
         Vector2 basePos;
         Vector2 slotOffset;
-        Rectangle region;
+        public Rectangle bounds;
 
         public ConvergeZone(JSONTable template, ConvergePlayer owner, ConvergeZoneId zoneId)
         {
@@ -76,7 +76,7 @@ namespace SpaceConvergence
             this.slotOffset = template.getVector2("slotOffset");
             Vector2 topLeft = template.getVector2("topLeft");
             Vector2 bottomRight = template.getVector2("bottomRight");
-            region = new Rectangle(topLeft.ToPoint(), (bottomRight - topLeft).ToPoint());
+            bounds = new Rectangle(topLeft.ToPoint(), (bottomRight - topLeft).ToPoint());
         }
 
         public void Add(ConvergeObject newObj)
@@ -87,6 +87,7 @@ namespace SpaceConvergence
             newObj.slot = contents.Count;
             newObj.zone = this;
             contents.Add(newObj);
+            RenumberAll();
         }
 
         public void Remove(ConvergeObject oldObj)
@@ -94,11 +95,36 @@ namespace SpaceConvergence
             contents.Remove(oldObj);
             oldObj.zone = null;
             oldObj.slot = 0;
+            RenumberAll();
+        }
+
+        void RenumberAll()
+        {
+            for(int Idx = 0; Idx < contents.Count; ++Idx )
+            {
+                contents[Idx].slot = Idx;
+            }
         }
 
         public Vector2 GetNominalPos(int slot)
         {
             return basePos + slotOffset * slot;// + (slot%2==0?new Vector2(10,0):new Vector2(-10,0));
+        }
+
+        public void BeginTurn()
+        {
+            foreach(ConvergeObject obj in contents)
+            {
+                obj.BeginTurn();
+            }
+        }
+
+        public void EndTurn()
+        {
+            foreach (ConvergeObject obj in contents)
+            {
+                obj.EndTurn();
+            }
         }
     }
 
@@ -110,8 +136,11 @@ namespace SpaceConvergence
         public ConvergeZone defense;
         public ConvergeZone hand;
         public int life;
+        public int numLandsPlayed;
+        public int numLandsPlayable = 1;
         public ConvergeManaAmount resources = new ConvergeManaAmount();
         public ConvergeManaAmount resourcesSpent = new ConvergeManaAmount();
+        public ConvergePlayer opponent;
 
         public ConvergePlayer(JSONTable template, ContentManager Content)
         {
@@ -142,9 +171,35 @@ namespace SpaceConvergence
             }
         }
 
+        public bool CanPayCost(ConvergeManaAmount cost)
+        {
+            return resourcesSpent.CanSpend(resources, cost);
+        }
+
         public bool TryPayCost(ConvergeManaAmount cost)
         {
             return resourcesSpent.TrySpend(resources, cost);
+        }
+
+        public void TakeDamage(int amount)
+        {
+            life -= amount;
+        }
+
+        public void BeginTurn()
+        {
+            resourcesSpent.Clear();
+            numLandsPlayed = 0;
+            attack.BeginTurn();
+            defense.BeginTurn();
+            home.BeginTurn();
+        }
+
+        public void EndTurn()
+        {
+            attack.EndTurn();
+            defense.EndTurn();
+            home.EndTurn();
         }
     }
 
@@ -228,15 +283,26 @@ namespace SpaceConvergence
             if (cost == null)
                 return true;
 
-            for (int Idx = 0; Idx < amounts.Length; ++Idx)
-            {
-                if (resources.amounts[Idx] - amounts[Idx] < cost.amounts[Idx])
-                    return false;
-            }
+            if (!CanSpend(resources, cost))
+                return false;
 
             for (int Idx = 0; Idx < amounts.Length; ++Idx)
             {
                 amounts[Idx] += cost.amounts[Idx];
+            }
+
+            return true;
+        }
+
+        public bool CanSpend(ConvergeManaAmount resources, ConvergeManaAmount cost)
+        {
+            if (cost == null)
+                return true;
+
+            for (int Idx = 0; Idx < amounts.Length; ++Idx)
+            {
+                if (resources.amounts[Idx] - amounts[Idx] < cost.amounts[Idx])
+                    return false;
             }
 
             return true;
@@ -308,10 +374,22 @@ namespace SpaceConvergence
             target.TakeDamage(dealtDamage);
         }
 
-        public void Use()
+        public void Play()
         {
             if(zone.zoneId == ConvergeZoneId.Hand)
             {
+                if(this.cardType.HasFlag(ConvergeCardType.Support))
+                {
+                    if(zone.owner.numLandsPlayed < zone.owner.numLandsPlayable)
+                    {
+                        zone.owner.numLandsPlayed++;
+                    }
+                    else
+                    {
+                        return;
+                    }
+                }
+
                 if (zone.owner.TryPayCost(cost))
                 {
                     if (this.cardType.HasFlag(ConvergeCardType.Unit))
@@ -346,6 +424,45 @@ namespace SpaceConvergence
         {
             get { return zone.GetNominalPos(slot); }
         }
+
+        public bool CanBePlayed()
+        {
+            if (cost != null && !zone.owner.CanPayCost(cost))
+                return false;
+
+            if (cardType.HasFlag(ConvergeCardType.Support) && zone.owner.numLandsPlayed >= zone.owner.numLandsPlayable)
+                return false;
+
+            return true;
+        }
+
+        public void EnterAttack()
+        {
+            if(!tapped && cardType.HasFlag(ConvergeCardType.Unit))
+                zone.owner.attack.Add(this);
+        }
+
+        public void WithdrawAttack()
+        {
+            zone.owner.defense.Add(this);
+            tapped = true;
+        }
+
+        public void BeginTurn()
+        {
+            if(zone.zoneId == ConvergeZoneId.Attack)
+                zone.owner.opponent.TakeDamage(power);
+            tapped = false;
+            shields = maxShields;
+        }
+
+        public void EndTurn()
+        {
+            if(wounds > 0)
+            {
+                //zone.owner.discardPile.Add(this);
+            }
+        }
     }
 
     public class ConvergeUIObject : UIElement
@@ -373,7 +490,7 @@ namespace SpaceConvergence
             }
 
             if (isMousePressing && isMouseOver && inputState.mouseLeft.justReleased)
-                represented.Use(); // clicked
+                represented.Play(); // clicked
 
             if (!inputState.mouseLeft.isDown)
                 isMousePressing = false;
@@ -394,6 +511,20 @@ namespace SpaceConvergence
                         if (inputState.hoveringElement is ConvergeUIObject)
                         {
                             represented.UseOn(((ConvergeUIObject)inputState.hoveringElement).represented);
+                        }
+                    }
+                    else
+                    {
+                        ConvergeZone currentZone = represented.zone;
+                        ConvergeZone attackZone = represented.zone.owner.attack;
+                        ConvergeZone defenseZone = represented.zone.owner.defense;
+                        if (currentZone != attackZone && attackZone.bounds.Contains(inputState.MousePos))
+                        {
+                            represented.EnterAttack();
+                        }
+                        else if (currentZone != defenseZone && defenseZone.bounds.Contains(inputState.MousePos))
+                        {
+                            represented.WithdrawAttack();
                         }
                     }
 
@@ -476,14 +607,25 @@ namespace SpaceConvergence
                 represented.zone.owner.resources.DrawResources(spriteBatch, represented.zone.owner.resourcesSpent, new Vector2(gfxFrame.Center.X, gfxFrame.Bottom));
             }
 
-            if(isMouseOver && represented.zone.zoneId == ConvergeZoneId.Hand && represented.cost != null)
+            bool drawHighlight = isMouseOver;
+            Color highlightColor = Color.White;
+            if (represented.zone.zoneId == ConvergeZoneId.Hand)
             {
-                represented.cost.DrawCost(spriteBatch, new Vector2(gfxFrame.Left, gfxFrame.Top));
+                if(represented.CanBePlayed())
+                {
+                    drawHighlight = true;
+                    highlightColor = Color.Orange;
+                }
+
+                if (isMouseOver && represented.cost != null)
+                {
+                    represented.cost.DrawCost(spriteBatch, new Vector2(gfxFrame.Left, gfxFrame.Top));
+                }
             }
 
-            if (isMouseOver)
+            if (drawHighlight)
             {
-                spriteBatch.Draw(Game1.mouseOverGlow, gfxFrame, Color.White);
+                spriteBatch.Draw(Game1.mouseOverGlow, gfxFrame, highlightColor);
             }
         }
     }
