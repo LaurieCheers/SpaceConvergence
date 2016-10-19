@@ -26,6 +26,7 @@ namespace SpaceConvergence
         public static Texture2D powerbg;
         public static Texture2D woundbg;
         public static Texture2D shieldbg;
+        public static Texture2D[] resourceTextures;
 
         public static RichImage mouseOverGlow;
 
@@ -67,6 +68,16 @@ namespace SpaceConvergence
             shieldbg = Content.Load<Texture2D>("shieldbg");
             powerbg = Content.Load<Texture2D>("powerbg");
             woundbg = Content.Load<Texture2D>("woundbg");
+
+            resourceTextures = new Texture2D[]
+            {
+                Content.Load<Texture2D>("total_resources"),
+                Content.Load<Texture2D>("white_hats"),
+                Content.Load<Texture2D>("blue_science"),
+                Content.Load<Texture2D>("black_hats"),
+                Content.Load<Texture2D>("red_munitions"),
+                Content.Load<Texture2D>("green_seeds"),
+            };
 
             self = new ConvergePlayer(data.getJSON("self"), Content);
             opponent = new ConvergePlayer(data.getJSON("opponent"), Content);

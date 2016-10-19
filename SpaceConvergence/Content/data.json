@@ -2,21 +2,25 @@
   "mouseOverGlow":{"texture":"mouseOverGlow", "draw":"stretched9grid", "padding":8},
   "self":{
     "homebase":{"art":"homebase", "cardType":["Home"]},
-	"hand":{"basePos":[100,350], "slotOffset":[100,0]},
-	"home":{"basePos":[100,50], "slotOffset":[0,80]},
-	"attack":{"basePos":[500,50], "slotOffset":[0,80]},
+	"hand":{"basePos":[100,375], "slotOffset":[50,0], "topLeft":[100,375], "bottomRight":[200,500]},
+	"home":{"basePos":[50,50], "slotOffset":[-15,30], "topLeft":[50,50], "bottomRight":[150,350]},
+	"defense":{"basePos":[150,50], "slotOffset":[0,80], "topLeft":[150,50], "bottomRight":[250,350]},
+	"attack":{"basePos":[400,50], "slotOffset":[0,80], "topLeft":[400,50], "bottomRight":[500,350]},
 	"startingLife":20,
   },
   "opponent":{
     "homebase":{"art":"homebase", "cardType":["Home"]},
-	"hand":{"basePos":[100,350], "slotOffset":[100,0]},
-	"home":{"basePos":[600,50], "slotOffset":[0,80]},
-	"attack":{"basePos":[300,50], "slotOffset":[0,80]},
+	"hand":{"basePos":[100,375], "slotOffset":[50,0], "topLeft":[100,375], "bottomRight":[200,500]},
+	"home":{"basePos":[600,50], "slotOffset":[0,80], "topLeft":[600,50], "bottomRight":[700,350]},
+	"defense":{"basePos":[500,50], "slotOffset":[0,80], "topLeft":[500,50], "bottomRight":[600,350]},
+	"attack":{"basePos":[300,50], "slotOffset":[0,80], "topLeft":[300,50], "bottomRight":[400,350]},
 	"startingLife":20,
   },
   "cards":
   [
-	{"art":"clown", "cardType":["Unit"], "power":2, "shields":2},
-	{"art":"sniper", "cardType":["Unit"], "power":3, "shields":1},
+	{"art":"farmer", "cardType":["Support"], "produces":"G"},
+	{"art":"pope", "cardType":["Support"], "produces":"W"},
+	{"art":"clown", "cardType":["Unit"], "cost":"CCG", "power":2, "shields":2},
+	{"art":"sniper", "cardType":["Unit"], "cost":"CW", "power":2, "shields":1},
   ]
 }
