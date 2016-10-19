@@ -18,8 +18,8 @@
   },
   "cards":
   [
-	{"art":"farmer", "cardType":["Support"], "produces":"G"},
-	{"art":"pope", "cardType":["Support"], "produces":"W"},
+	{"art":"farmer", "cardType":["Support"], "produces":"1G"},
+	{"art":"pope", "cardType":["Support"], "produces":"1W"},
 	{"art":"clown", "cardType":["Unit"], "cost":"CCG", "power":2, "shields":2},
 	{"art":"sniper", "cardType":["Unit"], "cost":"CW", "power":2, "shields":1},
   ]

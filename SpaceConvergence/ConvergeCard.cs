@@ -110,8 +110,8 @@ namespace SpaceConvergence
         public ConvergeZone defense;
         public ConvergeZone hand;
         public int life;
-        public int[] resources = new int[6];
-        public int[] resourcesSpent = new int[6];
+        public ConvergeManaAmount resources = new ConvergeManaAmount();
+        public ConvergeManaAmount resourcesSpent = new ConvergeManaAmount();
 
         public ConvergePlayer(JSONTable template, ContentManager Content)
         {
@@ -125,9 +125,7 @@ namespace SpaceConvergence
 
         public void UpdateState()
         {
-            for (int Idx = 0; Idx < resources.Length; ++Idx)
-                resources[Idx] = 0;
-
+            resources.Clear();
             UpdateZone(home);
             UpdateZone(defense);
             UpdateZone(attack);
@@ -139,12 +137,109 @@ namespace SpaceConvergence
             {
                 if (obj.produces != null)
                 {
-                    for (int Idx = 0; Idx < resources.Length; ++Idx)
-                    {
-                        resources[Idx] += obj.produces[Idx];
-                    }
+                    resources.Add(obj.produces);
                 }
             }
+        }
+
+        public bool TryPayCost(ConvergeManaAmount cost)
+        {
+            return resourcesSpent.TrySpend(resources, cost);
+        }
+    }
+
+    public class ConvergeManaAmount
+    {
+        int[] amounts;
+
+        public ConvergeManaAmount()
+        {
+            amounts = new int[6];
+        }
+
+        public ConvergeManaAmount(string template)
+        {
+            amounts = new int[6];
+            foreach(char c in template)
+            {
+                switch (c)
+                {
+                    case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
+                        amounts[0] += (c-'0');
+                        break;
+                    case 'C': amounts[0]++;
+                        break;
+                    case 'W': amounts[1]++;
+                        break;
+                    case 'U': amounts[2]++;
+                        break;
+                    case 'B': amounts[3]++;
+                        break;
+                    case 'R': amounts[4]++;
+                        break;
+                    case 'G': amounts[5]++;
+                        break;
+                    default: throw new ArgumentException();
+                }
+            }
+        }
+
+        public void Clear()
+        {
+            for (int Idx = 0; Idx < amounts.Length; ++Idx)
+                amounts[Idx] = 0;
+        }
+
+        public void Add(ConvergeManaAmount other)
+        {
+            for (int Idx = 0; Idx < amounts.Length; ++Idx)
+                amounts[Idx] += other.amounts[Idx];
+        }
+
+        public void DrawResources(SpriteBatch spriteBatch, ConvergeManaAmount spent, Vector2 drawPos)
+        {
+            for (int Idx = 0; Idx < amounts.Length; ++Idx)
+            {
+                int maxAmount = amounts[Idx];
+                int currentAmount = maxAmount - spent.amounts[Idx];
+                if (maxAmount > 0)
+                {
+                    spriteBatch.Draw(Game1.resourceTextures[Idx], drawPos, Color.White);
+                    spriteBatch.DrawString(Game1.font, "" + currentAmount, drawPos + new Vector2(20, 0), currentAmount>0? Color.Black: Color.DarkGreen);
+                    drawPos.Y += 20;
+                }
+            }
+        }
+
+        public void DrawCost(SpriteBatch spriteBatch, Vector2 drawPos)
+        {
+            for (int Idx = 0; Idx < amounts.Length; ++Idx)
+            {
+                for(int amount = amounts[Idx]; amount > 0; --amount)
+                {
+                    spriteBatch.Draw(Game1.resourceTextures[Idx], drawPos, Color.White);
+                    drawPos.X += 18;
+                }
+            }
+        }
+
+        public bool TrySpend(ConvergeManaAmount resources, ConvergeManaAmount cost)
+        {
+            if (cost == null)
+                return true;
+
+            for (int Idx = 0; Idx < amounts.Length; ++Idx)
+            {
+                if (resources.amounts[Idx] - amounts[Idx] < cost.amounts[Idx])
+                    return false;
+            }
+
+            for (int Idx = 0; Idx < amounts.Length; ++Idx)
+            {
+                amounts[Idx] += cost.amounts[Idx];
+            }
+
+            return true;
         }
     }
 
@@ -154,7 +249,8 @@ namespace SpaceConvergence
         public readonly ConvergeCardType cardType;
         public readonly int power;
         public readonly int maxShields;
-        public readonly int[] produces;
+        public readonly ConvergeManaAmount produces;
+        public readonly ConvergeManaAmount cost;
 
         public ConvergeCardSpec(JSONTable template, ContentManager Content)
         {
@@ -166,17 +262,16 @@ namespace SpaceConvergence
             }
             power = template.getInt("power", 0);
             maxShields = template.getInt("shields", 0);
-            JSONArray producesTemplate = template.getArray("produces", null);
-
-            if (producesTemplate != null)
+            string producesTemplate = template.getString("produces", "");
+            if (producesTemplate != "")
             {
-                produces = new int[6];
-                foreach (string text in template.getArray("produces", JSONArray.empty).asStrings())
-                {
-                    ConvergeColor color = ((ConvergeColor)Enum.Parse(typeof(ConvergeColor), text));
-                    produces[0]++;
-                    produces[color.ToIndex()]++;
-                }
+                produces = new ConvergeManaAmount(template.getString("produces"));
+            }
+
+            string costTemplate = template.getString("cost", "");
+            if (costTemplate != "")
+            {
+                cost = new ConvergeManaAmount(costTemplate);
             }
         }
     }
@@ -188,12 +283,14 @@ namespace SpaceConvergence
         public ConvergeCardType cardType { get { return original.cardType; } }
         public int power { get { return original.power; } }
         public int maxShields { get { return original.maxShields; } }
-        public int[] produces { get { return original.produces; } }
+        public ConvergeManaAmount produces { get { return original.produces; } }
+        public ConvergeManaAmount cost { get { return original.cost; } }
         public ConvergeZone zone;
         public int slot;
 
         public int shields;
         public int wounds;
+        public bool tapped;
 
         public ConvergeObject(ConvergeCardSpec original, ConvergeZone zone)
         {
@@ -215,12 +312,20 @@ namespace SpaceConvergence
         {
             if(zone.zoneId == ConvergeZoneId.Hand)
             {
-                if (this.cardType.HasFlag(ConvergeCardType.Unit))
-                    zone.owner.defense.Add(this);
-                else
-                    zone.owner.home.Add(this);
+                if (zone.owner.TryPayCost(cost))
+                {
+                    if (this.cardType.HasFlag(ConvergeCardType.Unit))
+                    {
+                        zone.owner.defense.Add(this);
+                        tapped = true;
+                    }
+                    else
+                    {
+                        zone.owner.home.Add(this);
+                    }
 
-                zone.owner.UpdateState();
+                    zone.owner.UpdateState();
+                }
             }
         }
 
@@ -331,7 +436,16 @@ namespace SpaceConvergence
         public override void Draw(SpriteBatch spriteBatch, Vector2 pos)
         {
             Texture2D art = represented.art;
-            spriteBatch.Draw(represented.art, new Rectangle(gfxFrame.Center.X - art.Width/2, gfxFrame.Bottom-art.Height, art.Width, art.Height), Color.White);
+            spriteBatch.Draw(
+                represented.art,
+                new Rectangle(gfxFrame.Center.X - art.Width / 2, gfxFrame.Bottom - art.Height, art.Width, art.Height),
+                represented.tapped ? new Color(128,128,255) : Color.White
+            );
+
+            if(represented.tapped)
+            {
+                spriteBatch.Draw(Game1.tappedicon, new Vector2(gfxFrame.Right-16, gfxFrame.Top), Color.White);
+            }
 
             if (represented.cardType.HasFlag(ConvergeCardType.Unit))
             {
@@ -359,18 +473,12 @@ namespace SpaceConvergence
             {
                 spriteBatch.DrawString(Game1.font, "" + represented.zone.owner.life, new Vector2(gfxFrame.Center.X, gfxFrame.Top + 20), TextAlignment.CENTER, Color.Black);
 
-                Vector2 resourceDrawPos = new Vector2(gfxFrame.Center.X, gfxFrame.Bottom);
-                for (int Idx = 0; Idx < 6; ++Idx)
-                {
-                    int maxAmount = represented.zone.owner.resources[Idx];
-                    int currentAmount = maxAmount - represented.zone.owner.resourcesSpent[Idx];
-                    if(currentAmount > 0)
-                    {
-                        spriteBatch.Draw(Game1.resourceTextures[Idx], resourceDrawPos, Color.White);
-                        spriteBatch.DrawString(Game1.font, "" + currentAmount, resourceDrawPos + new Vector2(20,0), Color.Black);
-                        resourceDrawPos.Y += 20;
-                    }
-                }
+                represented.zone.owner.resources.DrawResources(spriteBatch, represented.zone.owner.resourcesSpent, new Vector2(gfxFrame.Center.X, gfxFrame.Bottom));
+            }
+
+            if(isMouseOver && represented.zone.zoneId == ConvergeZoneId.Hand && represented.cost != null)
+            {
+                represented.cost.DrawCost(spriteBatch, new Vector2(gfxFrame.Left, gfxFrame.Top));
             }
 
             if (isMouseOver)

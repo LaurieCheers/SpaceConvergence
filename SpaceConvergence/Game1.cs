@@ -26,6 +26,7 @@ namespace SpaceConvergence
         public static Texture2D powerbg;
         public static Texture2D woundbg;
         public static Texture2D shieldbg;
+        public static Texture2D tappedicon;
         public static Texture2D[] resourceTextures;
 
         public static RichImage mouseOverGlow;
@@ -68,6 +69,7 @@ namespace SpaceConvergence
             shieldbg = Content.Load<Texture2D>("shieldbg");
             powerbg = Content.Load<Texture2D>("powerbg");
             woundbg = Content.Load<Texture2D>("woundbg");
+            tappedicon = Content.Load<Texture2D>("tapped");
 
             resourceTextures = new Texture2D[]
             {
