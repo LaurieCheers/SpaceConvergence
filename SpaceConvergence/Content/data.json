@@ -24,9 +24,16 @@
 	"farmer":{"art":"farmer", "cardType":["Support"], "produces":"1G"},
 	"armorer":{"art":"armorer", "cardType":["Support"], "produces":"1R"},
 	"pope":{"art":"pope", "cardType":["Support"], "produces":"1W"},
-	"clown":{"art":"clown", "cardType":["Unit"], "cost":"CCG", "power":2, "shields":2},
-	"sniper":{"art":"sniper", "cardType":["Unit"], "cost":"CW", "power":2, "shields":1},
+	"bear":{"art":"bear", "cardType":["Unit"], "cost":"CCG", "power":2, "shields":2},
+	"basilisk":{"art":"basilisk", "cardType":["Unit"], "cost":"CCCG", "power":2, "shields":5},
+	"beast":{"art":"beast", "cardType":["Unit"], "cost":"CCCCG", "power":5, "shields":3},
+	
+	"angel":{"art":"angel", "cardType":["Unit"], "cost":"CCCCCWW", "power":4, "shields":4},
+	"lion":{"art":"lion", "cardType":["Unit"], "cost":"CW", "power":2, "shields":1},
+	"cardinal":{"art":"cardinal", "cardType":["Unit"], "cost":"CCCW", "power":3, "shields":2},
+
+	"fox":{"art":"fox", "cardType":["Unit"], "cost":"CCR", "power":3, "shields":1},
   },
-  "mydeck": [ "farmer", "farmer", "clown" ],
-  "oppdeck": [ "armorer", "pope", "sniper" ]
+  "mydeck": [ "farmer", "farmer", "farmer", "farmer", "farmer", "farmer", "farmer", "bear", "beast", "basilisk" ],
+  "oppdeck": [ "pope", "pope", "pope", "pope", "pope", "pope", "lion", "angel", "lion", "cardinal" ]
 }
