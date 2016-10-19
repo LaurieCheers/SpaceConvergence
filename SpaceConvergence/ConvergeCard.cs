@@ -67,6 +67,7 @@ namespace SpaceConvergence
         Vector2 basePos;
         Vector2 slotOffset;
         public Rectangle bounds;
+        public bool inPlay;
 
         public ConvergeZone(JSONTable template, ConvergePlayer owner, ConvergeZoneId zoneId)
         {
@@ -74,6 +75,7 @@ namespace SpaceConvergence
             this.zoneId = zoneId;
             this.basePos = template.getVector2("basePos");
             this.slotOffset = template.getVector2("slotOffset");
+            this.inPlay = template.getBool("inPlay");
             Vector2 topLeft = template.getVector2("topLeft");
             Vector2 bottomRight = template.getVector2("bottomRight");
             bounds = new Rectangle(topLeft.ToPoint(), (bottomRight - topLeft).ToPoint());
@@ -87,6 +89,8 @@ namespace SpaceConvergence
             newObj.slot = contents.Count;
             newObj.zone = this;
             contents.Add(newObj);
+            if(!inPlay)
+                newObj.ClearOnLeavingPlay();
             RenumberAll();
         }
 
@@ -121,9 +125,17 @@ namespace SpaceConvergence
 
         public void EndTurn()
         {
+            List<ConvergeObject> deaders = new List<ConvergeObject>();
             foreach (ConvergeObject obj in contents)
             {
                 obj.EndTurn();
+                if (obj.dead)
+                    deaders.Add(obj);
+            }
+
+            foreach(ConvergeObject deadObj in deaders)
+            {
+                owner.discardPile.Add(deadObj);
             }
         }
     }
@@ -135,12 +147,15 @@ namespace SpaceConvergence
         public ConvergeZone attack;
         public ConvergeZone defense;
         public ConvergeZone hand;
+        public ConvergeZone discardPile;
         public int life;
         public int numLandsPlayed;
         public int numLandsPlayable = 1;
         public ConvergeManaAmount resources = new ConvergeManaAmount();
         public ConvergeManaAmount resourcesSpent = new ConvergeManaAmount();
         public ConvergePlayer opponent;
+        public bool faceLeft;
+        public bool isActivePlayer { get { return this == Game1.activePlayer; } }
 
         public ConvergePlayer(JSONTable template, ContentManager Content)
         {
@@ -149,7 +164,9 @@ namespace SpaceConvergence
             this.defense = new ConvergeZone(template.getJSON("defense"), this, ConvergeZoneId.Defense);
             this.hand = new ConvergeZone(template.getJSON("hand"), this, ConvergeZoneId.Hand);
             this.homeBase = new ConvergeObject(new ConvergeCardSpec(template.getJSON("homebase"), Content), home);
+            this.discardPile = new ConvergeZone(template.getJSON("discardPile"), this, ConvergeZoneId.DiscardPile);
             this.life = template.getInt("startingLife");
+            this.faceLeft = template.getBool("faceLeft", false);
         }
 
         public void UpdateState()
@@ -357,6 +374,12 @@ namespace SpaceConvergence
         public int shields;
         public int wounds;
         public bool tapped;
+        public bool dead;
+
+        public Vector2 nominalPosition
+        {
+            get { return zone.GetNominalPos(slot); }
+        }
 
         public ConvergeObject(ConvergeCardSpec original, ConvergeZone zone)
         {
@@ -368,10 +391,18 @@ namespace SpaceConvergence
 
         public void UseOn(ConvergeObject target)
         {
-            int incomingDamage = target.power;
-            int dealtDamage = power;
-            TakeDamage(incomingDamage);
-            target.TakeDamage(dealtDamage);
+            if (this.cardType.HasFlag(ConvergeCardType.Unit) && target.cardType.HasFlag(ConvergeCardType.Unit) &&
+                this.zone.zoneId == ConvergeZoneId.Defense && target.zone.zoneId == ConvergeZoneId.Attack &&
+                this.zone.owner != target.zone.owner &&
+                !this.tapped)
+            {
+                int incomingDamage = target.power;
+                int dealtDamage = power;
+                tapped = true;
+                target.tapped = true;
+                TakeDamage(incomingDamage);
+                target.TakeDamage(dealtDamage);
+            }
         }
 
         public void Play()
@@ -407,11 +438,19 @@ namespace SpaceConvergence
             }
         }
 
+        public void ClearOnLeavingPlay()
+        {
+            wounds = 0;
+            tapped = false;
+            shields = maxShields;
+            dead = false;
+        }
+
         void TakeDamage(int amount)
         {
             if(shields <= amount)
             {
-                wounds += (amount - shields);
+                wounds += 1 + (amount - shields);
                 shields = 0;
             }
             else
@@ -420,10 +459,6 @@ namespace SpaceConvergence
             }
         }
 
-        public Vector2 nominalPosition
-        {
-            get { return zone.GetNominalPos(slot); }
-        }
 
         public bool CanBePlayed()
         {
@@ -438,19 +473,22 @@ namespace SpaceConvergence
 
         public void EnterAttack()
         {
-            if(!tapped && cardType.HasFlag(ConvergeCardType.Unit))
+            if(!tapped && zone.zoneId == ConvergeZoneId.Defense && cardType.HasFlag(ConvergeCardType.Unit))
                 zone.owner.attack.Add(this);
         }
 
         public void WithdrawAttack()
         {
-            zone.owner.defense.Add(this);
-            tapped = true;
+            if (zone.zoneId == ConvergeZoneId.Attack && cardType.HasFlag(ConvergeCardType.Unit))
+            {
+                zone.owner.defense.Add(this);
+                tapped = true;
+            }
         }
 
         public void BeginTurn()
         {
-            if(zone.zoneId == ConvergeZoneId.Attack)
+            if(zone.zoneId == ConvergeZoneId.Attack && !tapped)
                 zone.owner.opponent.TakeDamage(power);
             tapped = false;
             shields = maxShields;
@@ -460,6 +498,7 @@ namespace SpaceConvergence
         {
             if(wounds > 0)
             {
+                dead = true;
                 //zone.owner.discardPile.Add(this);
             }
         }
@@ -473,6 +512,7 @@ namespace SpaceConvergence
         bool isMousePressing;
         bool isDragging;
         Vector2 mousePressedPos;
+        bool isVisible;
 
         public ConvergeUIObject(ConvergeObject represented)
         {
@@ -482,8 +522,15 @@ namespace SpaceConvergence
 
         public override void Update(InputState inputState, Vector2 origin)
         {
+            isVisible = represented.zone.zoneId == ConvergeZoneId.Hand? (represented.zone.owner.isActivePlayer): true;
+
+            if (!isVisible)
+            {
+                return;
+            }
+
             isMouseOver = (inputState.hoveringElement == this);
-            if (isMouseOver && inputState.mouseLeft.justPressed)
+            if (isMouseOver && inputState.mouseLeft.justPressed && represented.zone.owner.isActivePlayer)
             {
                 isMousePressing = true;
                 mousePressedPos = inputState.MousePos;
@@ -555,7 +602,7 @@ namespace SpaceConvergence
 
         public override UIMouseResponder GetMouseHover(Vector2 pos)
         {
-            if (isDragging)
+            if (isDragging || !isVisible)
                 return null;
 
             if (gfxFrame.Contains(pos))
@@ -564,18 +611,39 @@ namespace SpaceConvergence
             return null;
         }
 
+        static Color TappedTint = new Color(128, 128, 255);
+
         public override void Draw(SpriteBatch spriteBatch, Vector2 pos)
         {
+            if (!isVisible)
+                return;
+
             Texture2D art = represented.art;
+            Color artTint = Color.White;
+            if (represented.zone.zoneId == ConvergeZoneId.DiscardPile)
+                artTint = Color.Black;
+            else if (represented.tapped)
+                artTint = TappedTint;
+
             spriteBatch.Draw(
                 represented.art,
                 new Rectangle(gfxFrame.Center.X - art.Width / 2, gfxFrame.Bottom - art.Height, art.Width, art.Height),
-                represented.tapped ? new Color(128,128,255) : Color.White
+                null,
+                artTint,
+                0.0f,
+                Vector2.Zero,
+                represented.zone.owner.faceLeft ? SpriteEffects.FlipHorizontally : SpriteEffects.None,
+                0.0f
             );
 
             if(represented.tapped)
             {
                 spriteBatch.Draw(Game1.tappedicon, new Vector2(gfxFrame.Right-16, gfxFrame.Top), Color.White);
+            }
+
+            if (represented.zone.zoneId == ConvergeZoneId.DiscardPile)
+            {
+                return;
             }
 
             if (represented.cardType.HasFlag(ConvergeCardType.Unit))
@@ -604,7 +672,12 @@ namespace SpaceConvergence
             {
                 spriteBatch.DrawString(Game1.font, "" + represented.zone.owner.life, new Vector2(gfxFrame.Center.X, gfxFrame.Top + 20), TextAlignment.CENTER, Color.Black);
 
-                represented.zone.owner.resources.DrawResources(spriteBatch, represented.zone.owner.resourcesSpent, new Vector2(gfxFrame.Center.X, gfxFrame.Bottom));
+                Vector2 resourcePos;
+                if (represented.zone.owner.faceLeft)
+                    resourcePos = new Vector2(gfxFrame.Left, gfxFrame.Bottom);
+                else
+                    resourcePos = new Vector2(gfxFrame.Center.X, gfxFrame.Bottom);
+                represented.zone.owner.resources.DrawResources(spriteBatch, represented.zone.owner.resourcesSpent, resourcePos);
             }
 
             bool drawHighlight = isMouseOver;
@@ -621,6 +694,10 @@ namespace SpaceConvergence
                 {
                     represented.cost.DrawCost(spriteBatch, new Vector2(gfxFrame.Left, gfxFrame.Top));
                 }
+            }
+            else if(drawHighlight && !represented.zone.owner.isActivePlayer)
+            {
+                highlightColor = Color.Red;
             }
 
             if (drawHighlight)

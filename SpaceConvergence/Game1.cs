@@ -15,8 +15,9 @@ namespace SpaceConvergence
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
         JSONTable data;
-        List<ConvergeObject> hand;
+        Dictionary<string, ConvergeCardSpec> allCards;
         UIContainer ui;
+        public static ConvergePlayer activePlayer;
         InputState inputState = new InputState();
 
         ConvergePlayer self;
@@ -92,19 +93,35 @@ namespace SpaceConvergence
             ui.Add(new ConvergeUIObject(opponent.homeBase));
 
             UIButtonStyle defaultStyle = UIButton.GetDefaultStyle(Content);
-            ui.Add(new UIButton("End Turn", new Rectangle(500, 400, 80, 40), defaultStyle, EndTurn_onPress));
+            ui.Add(new UIButton("End Turn", new Rectangle(600, 400, 80, 40), defaultStyle, EndTurn_onPress));
 
-            foreach(JSONTable cardTemplate in data.getArray("cards").asJSONTables())
+            allCards = new Dictionary<string, ConvergeCardSpec>();
+            JSONTable allCardsTemplate = data.getJSON("cards");
+            foreach (string cardName in allCardsTemplate.Keys)
             {
-                ConvergeObject handCard = new ConvergeObject(new ConvergeCardSpec(cardTemplate, Content), self.hand);
+                allCards.Add(cardName, new ConvergeCardSpec(allCardsTemplate.getJSON(cardName), Content));
+            }
+
+            foreach(string cardName in data.getArray("mydeck").asStrings())
+            {
+                ConvergeObject handCard = new ConvergeObject(allCards[cardName], self.hand);
                 ui.Add(new ConvergeUIObject(handCard));
             }
+
+            foreach (string cardName in data.getArray("oppdeck").asStrings())
+            {
+                ConvergeObject handCard = new ConvergeObject(allCards[cardName], opponent.hand);
+                ui.Add(new ConvergeUIObject(handCard));
+            }
+
+            activePlayer = self;
         }
 
         public void EndTurn_onPress()
         {
-            self.EndTurn();
-            self.BeginTurn();
+            activePlayer.EndTurn();
+            activePlayer = activePlayer.opponent;
+            activePlayer.BeginTurn();
         }
 
         /// <summary>
