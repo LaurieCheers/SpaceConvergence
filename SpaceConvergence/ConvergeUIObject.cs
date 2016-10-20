@@ -150,6 +150,13 @@ namespace SpaceConvergence
                 spriteBatch.Draw(Game1.tappedicon, new Vector2(gfxFrame.Right - 16, gfxFrame.Top), Color.White);
             }
 
+            Vector2 iconPos = gfxFrame.XY();
+            foreach (ConvergeActivatedAbility ability in represented.activatedAbilities)
+            {
+                ability.Draw(spriteBatch, iconPos);
+                iconPos.X += 32;
+            }
+
             if (represented.zone.zoneId == ConvergeZoneId.DiscardPile)
             {
                 return;

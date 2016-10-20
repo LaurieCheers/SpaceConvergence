@@ -84,6 +84,7 @@ namespace SpaceConvergence
         public readonly ConvergeManaAmount produces;
         public readonly ConvergeManaAmount cost;
         public readonly ConvergeKeyword keywords;
+        public readonly List<ConvergeActivatedAbility> activatedAbilities;
 
         public ConvergeCardSpec(JSONTable template, ContentManager Content)
         {
@@ -112,6 +113,12 @@ namespace SpaceConvergence
             {
                 keywords |= (ConvergeKeyword)Enum.Parse(typeof(ConvergeKeyword), name);
             }
+
+            activatedAbilities = new List<ConvergeActivatedAbility>();
+            foreach(JSONTable abilityTemplate in template.getArray("activated", JSONArray.empty).asJSONTables())
+            {
+                activatedAbilities.Add(new ConvergeActivatedAbility(abilityTemplate, Content));
+            }
         }
     }
 
@@ -126,6 +133,7 @@ namespace SpaceConvergence
         public ConvergeManaAmount cost { get { return original.cost; } }
         public ConvergeZone zone;
         public ConvergeKeyword keywords { get { return original.keywords; } }
+        public List<ConvergeActivatedAbility> activatedAbilities { get { return original.activatedAbilities; } }
         public int slot;
 
         public int shields;
@@ -223,7 +231,7 @@ namespace SpaceConvergence
             dead = false;
         }
 
-        void DealDamage(ConvergeObject victim, int amount)
+        public void DealDamage(ConvergeObject victim, int amount)
         {
             victim.TakeDamage(amount);
 

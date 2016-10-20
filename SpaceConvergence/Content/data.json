@@ -32,8 +32,11 @@
 	"lion":{"art":"lion", "cardType":["Unit"], "cost":"CW", "power":2, "shields":1},
 	"cardinal":{"art":"cardinal", "cardType":["Unit"], "cost":"CCCW", "power":3, "shields":2},
 
-	"fox":{"art":"fox", "cardType":["Unit"], "cost":"CCR", "power":3, "shields":1},
+	"fox":{"art":"fox", "cardType":["Unit"], "cost":"CCR", "power":3, "shields":1, "activated":[
+		{"icon":"damage_icon", "effect":["damage", "source", 3, "opponent"]}
+	]},
   },
   "mydeck": [ "farmer", "farmer", "farmer", "farmer", "farmer", "farmer", "farmer", "bear", "beast", "basilisk" ],
-  "oppdeck": [ "pope", "pope", "pope", "pope", "pope", "pope", "lion", "angel", "lion", "cardinal" ]
+  "oppdeck": [ "armorer", "armorer", "armorer", "armorer", "pope", "pope", "lion", "angel", "fox", "cardinal", "fox" ]
+//  "oppdeck": [ "pope", "pope", "pope", "pope", "pope", "pope", "lion", "angel", "lion", "cardinal" ]
 }
