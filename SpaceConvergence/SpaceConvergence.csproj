@@ -39,6 +39,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="ConvergeCard.cs" />
+    <Compile Include="ConvergeManaAmount.cs" />
+    <Compile Include="ConvergePlayer.cs" />
+    <Compile Include="ConvergeUIObject.cs" />
+    <Compile Include="ConvergeZone.cs" />
     <Compile Include="Game1.cs" />
     <Compile Include="LRCEngine\InputState.cs" />
     <Compile Include="LRCEngine\JSONTable.cs" />
