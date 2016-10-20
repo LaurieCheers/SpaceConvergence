@@ -8,7 +8,7 @@
 	"attack":{"basePos":[440,50], "slotOffset":[10,80], "topLeft":[375,0], "bottomRight":[800,500], "inPlay":true},
 	"discardPile":{"basePos":[40,0], "slotOffset":[0,0], "topLeft":[0,0], "bottomRight":[75,60], "isHidden":true},
 	"laboratory":{"basePos":[90,0], "slotOffset":[0,0], "topLeft":[0,0], "bottomRight":[125,60], "isHidden":true},
-	"startingLife":20,
+	"startingLife":20
   },
   "opponent":{
     "homebase":{"art":"homebase", "cardType":["Home"]},
@@ -19,7 +19,7 @@
 	"discardPile":{"basePos":[690,0], "slotOffset":[0,0], "topLeft":[690,0], "bottomRight":[740,60], "isHidden":true},
 	"laboratory":{"basePos":[90,0], "slotOffset":[0,0], "topLeft":[40,0], "bottomRight":[140,60], "isHidden":true},
 	"startingLife":20,
-	"faceLeft":true,
+	"faceLeft":true
   },
   "cards":
   {
@@ -27,14 +27,14 @@
 	"armorer":{"art":"armorer", "cardType":["Support"], "produces":"1R"},
 	"pope":{"art":"pope", "cardType":["Support"], "produces":"1W"},
 	"bear":{"art":"bear", "cardType":["Unit"], "cost":"CCG", "power":2, "shields":2},
-	"basilisk":{"art":"basilisk", "cardType":["Unit"], "cost":"CCCG", "power":2, "shields":5},
+	"basilisk":{"art":"basilisk", "cardType":["Unit"], "cost":"CCCG", "power":2, "shields":5, "keywords":["Deathtouch"]},
 	"beast":{"art":"beast", "cardType":["Unit"], "cost":"CCCCG", "power":5, "shields":3},
 	
 	"angel":{"art":"angel", "cardType":["Unit"], "cost":"CCCCCWW", "power":4, "shields":4, "keywords":["Flying"]},
 	"lion":{"art":"lion", "cardType":["Unit"], "cost":"CW", "power":2, "shields":1},
 	"cardinal":{"art":"cardinal", "cardType":["Unit"], "cost":"CCCW", "power":3, "shields":2},
 
-	"fox":{"art":"fox", "cardType":["Unit"], "cost":"CCR", "power":3, "shields":1},
+	"fox":{"art":"fox", "cardType":["Unit"], "cost":"CCR", "power":3, "shields":1}
   },
   "mydeck": [ "farmer", "farmer", "farmer", "farmer", "farmer", "farmer", "farmer", "bear", "beast", "basilisk" ],
   "oppdeck": [ "pope", "pope", "pope", "pope", "pope", "pope", "lion", "angel", "lion", "cardinal" ]

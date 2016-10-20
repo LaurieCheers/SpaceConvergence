@@ -38,7 +38,7 @@
     <ApplicationIcon>Icon.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="ConvergeCard.cs" />
+    <Compile Include="ConvergeObject.cs" />
     <Compile Include="ConvergeManaAmount.cs" />
     <Compile Include="ConvergePlayer.cs" />
     <Compile Include="ConvergeUIObject.cs" />

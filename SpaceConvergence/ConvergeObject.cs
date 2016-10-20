@@ -129,6 +129,8 @@ namespace SpaceConvergence
         public ConvergeKeyword keywords { get { return original.keywords; } }
         public int slot;
         public ConvergeUIObject ui;
+        public delegate void DealsDamage(ConvergeObject source, ConvergeObject target, int damageDealt, bool isCombatDamage);
+        public event DealsDamage OnDealsDamage;
 
         public int shields;
         public int wounds;
@@ -176,8 +178,8 @@ namespace SpaceConvergence
                 if(!target.keywords.HasFlag(ConvergeKeyword.Trample))
                     target.tapped = true;
 
-                DealDamage(target, dealtDamage);
-                target.DealDamage(this, incomingDamage);
+                DealDamage(target, dealtDamage, true);
+                target.DealDamage(this, incomingDamage, true);
             }
         }
 
@@ -223,15 +225,15 @@ namespace SpaceConvergence
             dead = false;
         }
 
-        void DealDamage(ConvergeObject victim, int amount)
+        void DealDamage(ConvergeObject victim, int amount, bool isCombatDamage)
         {
-            victim.TakeDamage(amount);
+            victim.TakeDamage(this, amount);
 
             if (keywords.HasFlag(ConvergeKeyword.Lifelink))
                 zone.owner.GainLife(amount);
         }
 
-        void TakeDamage(int amount)
+        void TakeDamage(ConvergeObject source, int amount)
         {
             if (cardType.HasFlag(ConvergeCardType.Home))
             {
@@ -247,6 +249,11 @@ namespace SpaceConvergence
                 else
                 {
                     shields -= amount;
+                    if (source.keywords.HasFlag(ConvergeKeyword.Deathtouch))
+                    {
+                        wounds += 1;
+                        shields = 0;
+                    }
                 }
             }
         }
@@ -286,7 +293,7 @@ namespace SpaceConvergence
         public void BeginTurn()
         {
             if(zone.zoneId == ConvergeZoneId.Attack && !tapped)
-                DealDamage(zone.owner.opponent.homeBase, power);
+                DealDamage(zone.owner.opponent.homeBase, power, true);
             tapped = false;
             shields = maxShields;
         }
