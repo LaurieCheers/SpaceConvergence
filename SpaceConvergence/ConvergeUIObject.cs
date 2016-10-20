@@ -18,10 +18,12 @@ namespace SpaceConvergence
         bool isDragging;
         Vector2 mousePressedPos;
         bool isVisible;
+        List<ConvergeUIAbility> abilityUIs;
 
         public ConvergeUIObject(ConvergeObject represented)
         {
             this.represented = represented;
+            represented.ui = this;
             this.gfxFrame = new Rectangle(represented.nominalPosition.ToPoint(), new Point(50, 60));
         }
 
@@ -114,6 +116,16 @@ namespace SpaceConvergence
             if (isDragging || !isVisible)
                 return null;
 
+            if (abilityUIs != null)
+            {
+                foreach (ConvergeUIAbility abilityUI in abilityUIs)
+                {
+                    UIMouseResponder result = abilityUI.GetMouseHover(pos);
+                    if (result != null)
+                        return result;
+                }
+            }
+
             if (gfxFrame.Contains(pos))
                 return this;
 
@@ -150,7 +162,7 @@ namespace SpaceConvergence
                 spriteBatch.Draw(Game1.tappedicon, new Vector2(gfxFrame.Right - 16, gfxFrame.Top), Color.White);
             }
 
-            Vector2 iconPos = gfxFrame.XY();
+            Vector2 iconPos = new Vector2(gfxFrame.Center.X, gfxFrame.Top);
             foreach (ConvergeActivatedAbility ability in represented.activatedAbilities)
             {
                 ability.Draw(spriteBatch, iconPos);
@@ -223,6 +235,28 @@ namespace SpaceConvergence
             {
                 spriteBatch.Draw(Game1.mouseOverGlow, gfxFrame, highlightColor);
             }
+        }
+    }
+
+    public class ConvergeUIAbility: UIMouseResponder
+    {
+        ConvergeActivatedAbility ability;
+        ConvergeUIObject parent;
+        Vector2 offset;
+
+        public ConvergeUIAbility(ConvergeActivatedAbility ability, Vector2 offset, ConvergeUIObject parent)
+        {
+            this.ability = ability;
+            this.offset = offset;
+            this.parent = parent;
+        }
+
+        public UIMouseResponder GetMouseHover(Vector2 pos)
+        {
+            if( Math.Abs(pos.X - offset.X) < 16 && Math.Abs(pos.Y - offset.Y) < 16)
+                return this;
+
+            return null;
         }
     }
 }

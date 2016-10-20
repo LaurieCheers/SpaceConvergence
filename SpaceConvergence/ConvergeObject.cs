@@ -39,6 +39,7 @@ namespace SpaceConvergence
         Defense, // battlefield (nonattacking creatures)
         Attack, // battlefield (attacking creatures)
         DiscardPile, // graveyard
+        Laboratory,
         Space, // exile
     };
 
@@ -135,6 +136,9 @@ namespace SpaceConvergence
         public ConvergeKeyword keywords { get { return original.keywords; } }
         public List<ConvergeActivatedAbility> activatedAbilities { get { return original.activatedAbilities; } }
         public int slot;
+        public ConvergeUIObject ui;
+        public delegate void DealsDamage(ConvergeObject source, ConvergeObject target, int damageDealt, bool isCombatDamage);
+        public event DealsDamage OnDealsDamage;
 
         public int shields;
         public int wounds;
@@ -143,7 +147,7 @@ namespace SpaceConvergence
 
         public Vector2 nominalPosition
         {
-            get { return zone.GetNominalPos(slot); }
+            get { return zone != null? zone.GetNominalPos(slot): Vector2.Zero; }
         }
 
         public ConvergeObject(ConvergeCardSpec original, ConvergeZone zone)
@@ -151,7 +155,7 @@ namespace SpaceConvergence
             this.original = original;
             this.shields = maxShields;
             this.wounds = 0;
-            zone.Add(this);
+            MoveZone(zone);
         }
 
         public void UseOn(ConvergeObject target)
@@ -182,8 +186,8 @@ namespace SpaceConvergence
                 if(!target.keywords.HasFlag(ConvergeKeyword.Trample))
                     target.tapped = true;
 
-                DealDamage(target, dealtDamage);
-                target.DealDamage(this, incomingDamage);
+                DealDamage(target, dealtDamage, true);
+                target.DealDamage(this, incomingDamage, true);
             }
         }
 
@@ -207,7 +211,7 @@ namespace SpaceConvergence
                 {
                     if (this.cardType.HasFlag(ConvergeCardType.Unit))
                     {
-                        zone.owner.defense.Add(this);
+                        MoveZone(zone.owner.defense);
                         if (!this.keywords.HasFlag(ConvergeKeyword.Haste))
                         {
                             tapped = true;
@@ -215,10 +219,8 @@ namespace SpaceConvergence
                     }
                     else
                     {
-                        zone.owner.home.Add(this);
+                        MoveZone(zone.owner.home);
                     }
-
-                    zone.owner.UpdateState();
                 }
             }
         }
@@ -231,15 +233,15 @@ namespace SpaceConvergence
             dead = false;
         }
 
-        public void DealDamage(ConvergeObject victim, int amount)
+        public void DealDamage(ConvergeObject victim, int amount, bool isCombatDamage)
         {
-            victim.TakeDamage(amount);
+            victim.TakeDamage(this, amount);
 
             if (keywords.HasFlag(ConvergeKeyword.Lifelink))
                 zone.owner.GainLife(amount);
         }
 
-        void TakeDamage(int amount)
+        void TakeDamage(ConvergeObject source, int amount)
         {
             if (cardType.HasFlag(ConvergeCardType.Home))
             {
@@ -255,10 +257,19 @@ namespace SpaceConvergence
                 else
                 {
                     shields -= amount;
+                    if (source.keywords.HasFlag(ConvergeKeyword.Deathtouch))
+                    {
+                        wounds += 1;
+                        shields = 0;
+                    }
                 }
             }
         }
 
+        public void MoveZone(ConvergeZone newZone)
+        {
+            Game1.zoneChanges.Add(new KeyValuePair<ConvergeObject, ConvergeZone>(this, newZone));
+        }
 
         public bool CanBePlayed()
         {
@@ -274,14 +285,14 @@ namespace SpaceConvergence
         public void EnterAttack()
         {
             if(!tapped && zone.zoneId == ConvergeZoneId.Defense && cardType.HasFlag(ConvergeCardType.Unit))
-                zone.owner.attack.Add(this);
+                MoveZone(zone.owner.attack);
         }
 
         public void WithdrawAttack()
         {
             if (zone.zoneId == ConvergeZoneId.Attack && cardType.HasFlag(ConvergeCardType.Unit))
             {
-                zone.owner.defense.Add(this);
+                MoveZone(zone.owner.defense);
                 if(!keywords.HasFlag(ConvergeKeyword.Vigilance))
                     tapped = true;
             }
@@ -290,7 +301,7 @@ namespace SpaceConvergence
         public void BeginTurn()
         {
             if(zone.zoneId == ConvergeZoneId.Attack && !tapped)
-                DealDamage(zone.owner.opponent.homeBase, power);
+                DealDamage(zone.owner.opponent.homeBase, power, true);
             tapped = false;
             shields = maxShields;
         }

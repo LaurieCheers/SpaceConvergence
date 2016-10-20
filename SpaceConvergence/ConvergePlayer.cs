@@ -15,6 +15,7 @@ namespace SpaceConvergence
         public ConvergeZone attack;
         public ConvergeZone defense;
         public ConvergeZone hand;
+        public ConvergeZone laboratory;
         public ConvergeZone discardPile;
         public int life;
         public int numLandsPlayed;
@@ -33,6 +34,7 @@ namespace SpaceConvergence
             this.hand = new ConvergeZone(template.getJSON("hand"), this, ConvergeZoneId.Hand);
             this.homeBase = new ConvergeObject(new ConvergeCardSpec(template.getJSON("homebase"), Content), home);
             this.discardPile = new ConvergeZone(template.getJSON("discardPile"), this, ConvergeZoneId.DiscardPile);
+            this.laboratory = new ConvergeZone(template.getJSON("laboratory"), this, ConvergeZoneId.Laboratory);
             this.life = template.getInt("startingLife");
             this.faceLeft = template.getBool("faceLeft", false);
         }
@@ -76,6 +78,24 @@ namespace SpaceConvergence
             life += amount;
         }
 
+        public void DrawCards(int n)
+        {
+            if (laboratory.contents.Count < n)
+                n = laboratory.contents.Count;
+
+            for (int Idx = 0; Idx < n; ++Idx)
+            {
+                ConvergeObject drawn = laboratory.contents[Idx];
+                drawn.MoveZone(hand);
+            }
+        }
+
+        public void BeginGame()
+        {
+            laboratory.Shuffle();
+            DrawCards(7);
+        }
+
         public void BeginTurn()
         {
             resourcesSpent.Clear();
@@ -83,6 +103,7 @@ namespace SpaceConvergence
             attack.BeginTurn();
             defense.BeginTurn();
             home.BeginTurn();
+            DrawCards(1);
         }
 
         public void EndTurn()

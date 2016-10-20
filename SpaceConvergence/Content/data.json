@@ -2,22 +2,24 @@
   "mouseOverGlow":{"texture":"mouseOverGlow", "draw":"stretched9grid", "padding":8},
   "self":{
     "homebase":{"art":"homebase", "cardType":["Home"]},
-	"hand":{"basePos":[100,375], "slotOffset":[50,0], "topLeft":[100,375], "bottomRight":[700,500], "inPlay":false},
-	"home":{"basePos":[50,50], "slotOffset":[-15,30], "topLeft":[50,50], "bottomRight":[150,350], "inPlay":true},
-	"defense":{"basePos":[150,50], "slotOffset":[-25,80], "topLeft":[0,0], "bottomRight":[250,500], "inPlay":true},
-	"attack":{"basePos":[400,50], "slotOffset":[10,80], "topLeft":[350,0], "bottomRight":[800,500], "inPlay":true},
-	"discardPile":{"basePos":[0,0], "slotOffset":[0,0], "topLeft":[0,0], "bottomRight":[50,60], "inPlay":false},
-	"startingLife":20,
+	"hand":{"basePos":[125,375], "slotOffset":[50,0], "topLeft":[125,375], "bottomRight":[725,500]},
+	"home":{"basePos":[90,50], "slotOffset":[-15,30], "topLeft":[75,50], "bottomRight":[175,350], "inPlay":true},
+	"defense":{"basePos":[190,50], "slotOffset":[-25,80], "topLeft":[0,0], "bottomRight":[275,500], "inPlay":true},
+	"attack":{"basePos":[440,50], "slotOffset":[10,80], "topLeft":[375,0], "bottomRight":[800,500], "inPlay":true},
+	"discardPile":{"basePos":[40,0], "slotOffset":[0,0], "topLeft":[0,0], "bottomRight":[75,60], "isHidden":true},
+	"laboratory":{"basePos":[90,0], "slotOffset":[0,0], "topLeft":[0,0], "bottomRight":[125,60], "isHidden":true},
+	"startingLife":20
   },
   "opponent":{
     "homebase":{"art":"homebase", "cardType":["Home"]},
-	"hand":{"basePos":[500,375], "slotOffset":[-50,0], "topLeft":[100,375], "bottomRight":[700,500], "inPlay":false},
-	"home":{"basePos":[600,50], "slotOffset":[15,30], "topLeft":[600,50], "bottomRight":[700,350], "inPlay":true},
-	"defense":{"basePos":[500,50], "slotOffset":[25,80], "topLeft":[450,0], "bottomRight":[800,500], "inPlay":true},
-	"attack":{"basePos":[250,50], "slotOffset":[-10,80], "topLeft":[0,50], "bottomRight":[350,500], "inPlay":true},
-	"discardPile":{"basePos":[650,0], "slotOffset":[0,0], "topLeft":[650,0], "bottomRight":[700,60], "inPlay":false},
+	"hand":{"basePos":[540,375], "slotOffset":[-50,0], "topLeft":[140,375], "bottomRight":[740,500]},
+	"home":{"basePos":[640,50], "slotOffset":[15,30], "topLeft":[640,50], "bottomRight":[740,350], "inPlay":true},
+	"defense":{"basePos":[540,50], "slotOffset":[25,80], "topLeft":[490,0], "bottomRight":[800,500], "inPlay":true},
+	"attack":{"basePos":[290,50], "slotOffset":[-10,80], "topLeft":[0,50], "bottomRight":[390,500], "inPlay":true},
+	"discardPile":{"basePos":[690,0], "slotOffset":[0,0], "topLeft":[690,0], "bottomRight":[740,60], "isHidden":true},
+	"laboratory":{"basePos":[90,0], "slotOffset":[0,0], "topLeft":[40,0], "bottomRight":[140,60], "isHidden":true},
 	"startingLife":20,
-	"faceLeft":true,
+	"faceLeft":true
   },
   "cards":
   {
@@ -25,7 +27,7 @@
 	"armorer":{"art":"armorer", "cardType":["Support"], "produces":"1R"},
 	"pope":{"art":"pope", "cardType":["Support"], "produces":"1W"},
 	"bear":{"art":"bear", "cardType":["Unit"], "cost":"CCG", "power":2, "shields":2},
-	"basilisk":{"art":"basilisk", "cardType":["Unit"], "cost":"CCCG", "power":2, "shields":5},
+	"basilisk":{"art":"basilisk", "cardType":["Unit"], "cost":"CCCG", "power":2, "shields":5, "keywords":["Deathtouch"]},
 	"beast":{"art":"beast", "cardType":["Unit"], "cost":"CCCCG", "power":5, "shields":3},
 	
 	"angel":{"art":"angel", "cardType":["Unit"], "cost":"CCCCCWW", "power":4, "shields":4, "keywords":["Flying"]},

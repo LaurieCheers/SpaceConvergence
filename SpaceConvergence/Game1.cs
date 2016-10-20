@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
 using System.IO;
 using LRCEngine;
+using System;
 
 namespace SpaceConvergence
 {
@@ -16,8 +17,12 @@ namespace SpaceConvergence
         SpriteBatch spriteBatch;
         JSONTable data;
         Dictionary<string, ConvergeCardSpec> allCards;
-        UIContainer ui;
+        public static UIContainer ui;
+
+        public static List<KeyValuePair<ConvergeObject, ConvergeZone>> zoneChanges = new List<KeyValuePair<ConvergeObject, ConvergeZone>>();
+
         public static ConvergePlayer activePlayer;
+        public static Random rand = new Random();
         InputState inputState = new InputState();
 
         ConvergePlayer self;
@@ -82,12 +87,12 @@ namespace SpaceConvergence
                 Content.Load<Texture2D>("green_seeds"),
             };
 
+            ui = new UIContainer();
+
             self = new ConvergePlayer(data.getJSON("self"), Content);
             opponent = new ConvergePlayer(data.getJSON("opponent"), Content);
             self.opponent = opponent;
             opponent.opponent = self;
-
-            ui = new UIContainer();
 
             ui.Add(new ConvergeUIObject(self.homeBase));
             ui.Add(new ConvergeUIObject(opponent.homeBase));
@@ -104,17 +109,25 @@ namespace SpaceConvergence
 
             foreach(string cardName in data.getArray("mydeck").asStrings())
             {
-                ConvergeObject handCard = new ConvergeObject(allCards[cardName], self.hand);
-                ui.Add(new ConvergeUIObject(handCard));
+                //ConvergeObject handCard =
+                new ConvergeObject(allCards[cardName], self.laboratory);
+                //ui.Add(new ConvergeUIObject(handCard));
             }
 
             foreach (string cardName in data.getArray("oppdeck").asStrings())
             {
-                ConvergeObject handCard = new ConvergeObject(allCards[cardName], opponent.hand);
-                ui.Add(new ConvergeUIObject(handCard));
+                //ConvergeObject handCard =
+                new ConvergeObject(allCards[cardName], opponent.laboratory);
+                //ui.Add(new ConvergeUIObject(handCard));
             }
 
+            UpdateZoneChanges();
+
+            self.BeginGame();
+            opponent.BeginGame();
+
             activePlayer = self;
+            self.BeginTurn();
         }
 
         public void EndTurn_onPress()
@@ -143,9 +156,40 @@ namespace SpaceConvergence
             inputState.Update();
 
             inputState.hoveringElement = ui.GetMouseHover(inputState.MousePos);
+
+            UpdateZoneChanges();
             ui.Update(inputState);
 
             base.Update(gameTime);
+        }
+
+        void UpdateZoneChanges()
+        {
+            bool didAnything = zoneChanges.Count > 0;
+            foreach (KeyValuePair<ConvergeObject, ConvergeZone> kv in zoneChanges)
+            {
+                ConvergeObject obj = kv.Key;
+                ConvergeZone newZone = kv.Value;
+                newZone.Add(obj);
+
+                if (obj.ui == null && !newZone.isHidden && obj.zone == newZone)
+                {
+                    obj.ui = new ConvergeUIObject(obj);
+                    ui.Add(obj.ui);
+                }
+                else if (obj.ui != null && newZone.isHidden && obj.zone == newZone)
+                {
+                    ui.Remove(obj.ui);
+                    obj.ui = null;
+                }
+            }
+            zoneChanges.Clear();
+
+            if(didAnything)
+            {
+                self.UpdateState();
+                opponent.UpdateState();
+            }
         }
 
         /// <summary>

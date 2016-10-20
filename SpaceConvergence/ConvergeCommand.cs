@@ -44,7 +44,7 @@ namespace SpaceConvergence
             {
                 foreach (ConvergeObject source in sourcesList)
                 {
-                    source.DealDamage(victim, amount.GetValue(context));
+                    source.DealDamage(victim, amount.GetValue(context), false);
                 }
             }
         }
