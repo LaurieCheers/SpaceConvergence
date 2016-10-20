@@ -39,15 +39,6 @@ namespace SpaceConvergence
             this.faceLeft = template.getBool("faceLeft", false);
         }
 
-        public void UpdateUI()
-        {
-            this.attack.UpdateUI();
-            this.defense.UpdateUI();
-            this.hand.UpdateUI();
-            this.discardPile.UpdateUI();
-            this.laboratory.UpdateUI();
-        }
-
         public void UpdateState()
         {
             resources.Clear();
@@ -87,20 +78,22 @@ namespace SpaceConvergence
             life += amount;
         }
 
-        public void DrawCard()
+        public void DrawCards(int n)
         {
-            if (laboratory.contents.Count > 0)
+            if (laboratory.contents.Count < n)
+                n = laboratory.contents.Count;
+
+            for (int Idx = 0; Idx < n; ++Idx)
             {
-                ConvergeObject drawn = laboratory.contents[0];
-                hand.Add(drawn);
+                ConvergeObject drawn = laboratory.contents[Idx];
+                drawn.MoveZone(hand);
             }
         }
 
         public void BeginGame()
         {
             laboratory.Shuffle();
-            for (int Idx = 0; Idx < 7; ++Idx)
-                DrawCard();
+            DrawCards(7);
         }
 
         public void BeginTurn()
@@ -110,7 +103,7 @@ namespace SpaceConvergence
             attack.BeginTurn();
             defense.BeginTurn();
             home.BeginTurn();
-            DrawCard();
+            DrawCards(1);
         }
 
         public void EndTurn()

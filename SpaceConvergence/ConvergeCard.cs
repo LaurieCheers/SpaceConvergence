@@ -137,7 +137,7 @@ namespace SpaceConvergence
 
         public Vector2 nominalPosition
         {
-            get { return zone.GetNominalPos(slot); }
+            get { return zone != null? zone.GetNominalPos(slot): Vector2.Zero; }
         }
 
         public ConvergeObject(ConvergeCardSpec original, ConvergeZone zone)
@@ -145,7 +145,7 @@ namespace SpaceConvergence
             this.original = original;
             this.shields = maxShields;
             this.wounds = 0;
-            zone.Add(this);
+            MoveZone(zone);
         }
 
         public void UseOn(ConvergeObject target)
@@ -201,7 +201,7 @@ namespace SpaceConvergence
                 {
                     if (this.cardType.HasFlag(ConvergeCardType.Unit))
                     {
-                        zone.owner.defense.Add(this);
+                        MoveZone(zone.owner.defense);
                         if (!this.keywords.HasFlag(ConvergeKeyword.Haste))
                         {
                             tapped = true;
@@ -209,10 +209,8 @@ namespace SpaceConvergence
                     }
                     else
                     {
-                        zone.owner.home.Add(this);
+                        MoveZone(zone.owner.home);
                     }
-
-                    zone.owner.UpdateState();
                 }
             }
         }
@@ -253,6 +251,10 @@ namespace SpaceConvergence
             }
         }
 
+        public void MoveZone(ConvergeZone newZone)
+        {
+            Game1.zoneChanges.Add(new KeyValuePair<ConvergeObject, ConvergeZone>(this, newZone));
+        }
 
         public bool CanBePlayed()
         {
@@ -268,14 +270,14 @@ namespace SpaceConvergence
         public void EnterAttack()
         {
             if(!tapped && zone.zoneId == ConvergeZoneId.Defense && cardType.HasFlag(ConvergeCardType.Unit))
-                zone.owner.attack.Add(this);
+                MoveZone(zone.owner.attack);
         }
 
         public void WithdrawAttack()
         {
             if (zone.zoneId == ConvergeZoneId.Attack && cardType.HasFlag(ConvergeCardType.Unit))
             {
-                zone.owner.defense.Add(this);
+                MoveZone(zone.owner.defense);
                 if(!keywords.HasFlag(ConvergeKeyword.Vigilance))
                     tapped = true;
             }

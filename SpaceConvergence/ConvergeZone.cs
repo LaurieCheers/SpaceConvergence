@@ -33,25 +33,6 @@ namespace SpaceConvergence
             bounds = new Rectangle(topLeft.ToPoint(), (bottomRight - topLeft).ToPoint());
         }
 
-        public void UpdateUI()
-        {
-            foreach(ConvergeObject newObj in newlyAdded)
-            {
-                if (newObj.ui == null && !isHidden && newObj.zone == this)
-                {
-                    newObj.ui = new ConvergeUIObject(newObj);
-                    Game1.ui.Add(newObj.ui);
-                }
-                else if (newObj.ui != null && isHidden && newObj.zone == this)
-                {
-                    Game1.ui.Remove(newObj.ui);
-                    newObj.ui = null;
-                }
-            }
-
-            newlyAdded.Clear();
-        }
-
         public void Add(ConvergeObject newObj)
         {
             if (newObj.zone != null)

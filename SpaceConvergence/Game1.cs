@@ -18,6 +18,9 @@ namespace SpaceConvergence
         JSONTable data;
         Dictionary<string, ConvergeCardSpec> allCards;
         public static UIContainer ui;
+
+        public static List<KeyValuePair<ConvergeObject, ConvergeZone>> zoneChanges = new List<KeyValuePair<ConvergeObject, ConvergeZone>>();
+
         public static ConvergePlayer activePlayer;
         public static Random rand = new Random();
         InputState inputState = new InputState();
@@ -118,6 +121,8 @@ namespace SpaceConvergence
                 //ui.Add(new ConvergeUIObject(handCard));
             }
 
+            UpdateZoneChanges();
+
             self.BeginGame();
             opponent.BeginGame();
 
@@ -151,12 +156,40 @@ namespace SpaceConvergence
             inputState.Update();
 
             inputState.hoveringElement = ui.GetMouseHover(inputState.MousePos);
+
+            UpdateZoneChanges();
             ui.Update(inputState);
 
-            self.UpdateUI();
-            opponent.UpdateUI();
-
             base.Update(gameTime);
+        }
+
+        void UpdateZoneChanges()
+        {
+            bool didAnything = zoneChanges.Count > 0;
+            foreach (KeyValuePair<ConvergeObject, ConvergeZone> kv in zoneChanges)
+            {
+                ConvergeObject obj = kv.Key;
+                ConvergeZone newZone = kv.Value;
+                newZone.Add(obj);
+
+                if (obj.ui == null && !newZone.isHidden && obj.zone == newZone)
+                {
+                    obj.ui = new ConvergeUIObject(obj);
+                    ui.Add(obj.ui);
+                }
+                else if (obj.ui != null && newZone.isHidden && obj.zone == newZone)
+                {
+                    ui.Remove(obj.ui);
+                    obj.ui = null;
+                }
+            }
+            zoneChanges.Clear();
+
+            if(didAnything)
+            {
+                self.UpdateState();
+                opponent.UpdateState();
+            }
         }
 
         /// <summary>
