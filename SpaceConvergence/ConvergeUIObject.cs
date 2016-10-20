@@ -22,6 +22,7 @@ namespace SpaceConvergence
         public ConvergeUIObject(ConvergeObject represented)
         {
             this.represented = represented;
+            represented.ui = this;
             this.gfxFrame = new Rectangle(represented.nominalPosition.ToPoint(), new Point(50, 60));
         }
 

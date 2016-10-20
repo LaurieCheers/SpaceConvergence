@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
 using System.IO;
 using LRCEngine;
+using System;
 
 namespace SpaceConvergence
 {
@@ -16,8 +17,9 @@ namespace SpaceConvergence
         SpriteBatch spriteBatch;
         JSONTable data;
         Dictionary<string, ConvergeCardSpec> allCards;
-        UIContainer ui;
+        public static UIContainer ui;
         public static ConvergePlayer activePlayer;
+        public static Random rand = new Random();
         InputState inputState = new InputState();
 
         ConvergePlayer self;
@@ -82,12 +84,12 @@ namespace SpaceConvergence
                 Content.Load<Texture2D>("green_seeds"),
             };
 
+            ui = new UIContainer();
+
             self = new ConvergePlayer(data.getJSON("self"), Content);
             opponent = new ConvergePlayer(data.getJSON("opponent"), Content);
             self.opponent = opponent;
             opponent.opponent = self;
-
-            ui = new UIContainer();
 
             ui.Add(new ConvergeUIObject(self.homeBase));
             ui.Add(new ConvergeUIObject(opponent.homeBase));
@@ -104,17 +106,23 @@ namespace SpaceConvergence
 
             foreach(string cardName in data.getArray("mydeck").asStrings())
             {
-                ConvergeObject handCard = new ConvergeObject(allCards[cardName], self.hand);
-                ui.Add(new ConvergeUIObject(handCard));
+                //ConvergeObject handCard =
+                new ConvergeObject(allCards[cardName], self.laboratory);
+                //ui.Add(new ConvergeUIObject(handCard));
             }
 
             foreach (string cardName in data.getArray("oppdeck").asStrings())
             {
-                ConvergeObject handCard = new ConvergeObject(allCards[cardName], opponent.hand);
-                ui.Add(new ConvergeUIObject(handCard));
+                //ConvergeObject handCard =
+                new ConvergeObject(allCards[cardName], opponent.laboratory);
+                //ui.Add(new ConvergeUIObject(handCard));
             }
 
+            self.BeginGame();
+            opponent.BeginGame();
+
             activePlayer = self;
+            self.BeginTurn();
         }
 
         public void EndTurn_onPress()
@@ -144,6 +152,9 @@ namespace SpaceConvergence
 
             inputState.hoveringElement = ui.GetMouseHover(inputState.MousePos);
             ui.Update(inputState);
+
+            self.UpdateUI();
+            opponent.UpdateUI();
 
             base.Update(gameTime);
         }

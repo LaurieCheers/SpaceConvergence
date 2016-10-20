@@ -39,6 +39,7 @@ namespace SpaceConvergence
         Defense, // battlefield (nonattacking creatures)
         Attack, // battlefield (attacking creatures)
         DiscardPile, // graveyard
+        Laboratory,
         Space, // exile
     };
 
@@ -127,6 +128,7 @@ namespace SpaceConvergence
         public ConvergeZone zone;
         public ConvergeKeyword keywords { get { return original.keywords; } }
         public int slot;
+        public ConvergeUIObject ui;
 
         public int shields;
         public int wounds;
