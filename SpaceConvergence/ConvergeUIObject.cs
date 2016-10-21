@@ -16,6 +16,7 @@ namespace SpaceConvergence
         bool isMouseOver;
         bool isMousePressing;
         bool isDragging;
+        bool isBadDrag;
         Vector2 mousePressedPos;
         bool isVisible;
         List<ConvergeUIAbility> abilityUIs = new List<ConvergeUIAbility>();
@@ -36,6 +37,7 @@ namespace SpaceConvergence
 
         public override void Update(InputState inputState, Vector2 origin)
         {
+            isBadDrag = false;
             isVisible = represented.zone.zoneId == ConvergeZoneId.Hand ? (represented.zone.owner.isActivePlayer) : true;
 
             if (!isVisible)
@@ -63,6 +65,11 @@ namespace SpaceConvergence
                 if (isMousePressing)
                 {
                     this.gfxFrame = new Rectangle((int)inputState.MousePos.X - 25, (int)inputState.MousePos.Y - 30, 50, 60);
+
+                    if (inputState.hoveringElement != null && inputState.hoveringElement is ConvergeUIObject)
+                    {
+                        isBadDrag = !represented.CanTarget(((ConvergeUIObject)inputState.hoveringElement).represented, represented.controller);
+                    }
                 }
                 else
                 {
@@ -181,12 +188,17 @@ namespace SpaceConvergence
                 return;
             }
 
-            if (represented.cardType.HasFlag(ConvergeCardType.Unit))
+            if (represented.destroyed)
             {
-                if (represented.wounds > 0)
+                spriteBatch.Draw(Game1.woundbg, new Rectangle(gfxFrame.Center.X - 11, gfxFrame.Center.Y, 22, 16), Color.White);
+                spriteBatch.DrawString(Game1.font, "X", gfxFrame.Center.ToVector2(), TextAlignment.CENTER, Color.Red);
+            }
+            else if (represented.cardType.HasFlag(ConvergeCardType.Unit))
+            {
+                if (represented.damage >= represented.toughness)
                 {
                     spriteBatch.Draw(Game1.woundbg, new Rectangle(gfxFrame.Center.X - 11, gfxFrame.Center.Y, 22, 16), Color.White);
-                    spriteBatch.DrawString(Game1.font, "-" + represented.wounds, gfxFrame.Center.ToVector2(), TextAlignment.CENTER, Color.Red);
+                    spriteBatch.DrawString(Game1.font, "-" + (represented.toughness-1-represented.damage), gfxFrame.Center.ToVector2(), TextAlignment.CENTER, Color.Red);
                 }
                 else
                 {
@@ -195,11 +207,8 @@ namespace SpaceConvergence
                         spriteBatch.Draw(Game1.powerbg, new Rectangle(gfxFrame.Left + 8, gfxFrame.Bottom, 16, 16), Color.White);
                         spriteBatch.DrawString(Game1.font, "" + represented.power, new Vector2(gfxFrame.Left + 16, gfxFrame.Bottom), TextAlignment.CENTER, Color.Yellow);
                     }
-                    if (represented.shields > 0)
-                    {
-                        spriteBatch.Draw(Game1.shieldbg, new Rectangle(gfxFrame.Right - 24, gfxFrame.Bottom, 16, 16), Color.White);
-                        spriteBatch.DrawString(Game1.font, "" + represented.shields, new Vector2(gfxFrame.Right - 16, gfxFrame.Bottom), TextAlignment.CENTER, represented.shields < represented.maxShields ? Color.Red : Color.White);
-                    }
+                    spriteBatch.Draw(Game1.shieldbg, new Rectangle(gfxFrame.Right - 24, gfxFrame.Bottom, 16, 16), Color.White);
+                    spriteBatch.DrawString(Game1.font, "" + (represented.toughness-represented.damage), new Vector2(gfxFrame.Right - 16, gfxFrame.Bottom), TextAlignment.CENTER, represented.damage > 0 ? Color.Red : Color.White);
                 }
             }
 
@@ -222,7 +231,9 @@ namespace SpaceConvergence
                 if (represented.CanBePlayed(Game1.activePlayer))
                 {
                     drawHighlight = true;
-                    if (isMouseOver)
+                    if (isBadDrag)
+                        highlightColor = Color.Red;
+                    else if (isMouseOver)
                         highlightColor = Color.Yellow;
                     else
                         highlightColor = Color.Orange;

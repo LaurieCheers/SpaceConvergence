@@ -4,7 +4,7 @@
     "homebase":{"art":"homebase", "cardType":["Home"]},
 	"hand":{"basePos":[125,375], "slotOffset":[50,0], "topLeft":[125,375], "bottomRight":[725,500]},
 	"home":{"basePos":[90,50], "slotOffset":[-15,30], "topLeft":[75,50], "bottomRight":[175,350], "inPlay":true},
-	"defense":{"basePos":[190,50], "slotOffset":[-25,80], "topLeft":[0,0], "bottomRight":[275,500], "inPlay":true},
+	"defense":{"basePos":[190,50], "slotOffset":[-30,60], "topLeft":[0,0], "bottomRight":[275,500], "inPlay":true},
 	"attack":{"basePos":[440,50], "slotOffset":[10,80], "topLeft":[375,0], "bottomRight":[800,500], "inPlay":true},
 	"discardPile":{"basePos":[40,0], "slotOffset":[0,0], "topLeft":[0,0], "bottomRight":[75,60], "isHidden":true},
 	"laboratory":{"basePos":[90,0], "slotOffset":[0,0], "topLeft":[0,0], "bottomRight":[125,60], "isHidden":true},
@@ -14,7 +14,7 @@
     "homebase":{"art":"homebase", "cardType":["Home"]},
 	"hand":{"basePos":[540,375], "slotOffset":[-50,0], "topLeft":[140,375], "bottomRight":[740,500]},
 	"home":{"basePos":[640,50], "slotOffset":[15,30], "topLeft":[640,50], "bottomRight":[740,350], "inPlay":true},
-	"defense":{"basePos":[540,50], "slotOffset":[25,80], "topLeft":[490,0], "bottomRight":[800,500], "inPlay":true},
+	"defense":{"basePos":[540,50], "slotOffset":[30,60], "topLeft":[490,0], "bottomRight":[800,500], "inPlay":true},
 	"attack":{"basePos":[290,50], "slotOffset":[-10,80], "topLeft":[0,50], "bottomRight":[390,500], "inPlay":true},
 	"discardPile":{"basePos":[690,0], "slotOffset":[0,0], "topLeft":[690,0], "bottomRight":[740,60], "isHidden":true},
 	"laboratory":{"basePos":[90,0], "slotOffset":[0,0], "topLeft":[40,0], "bottomRight":[140,60], "isHidden":true},
@@ -26,29 +26,52 @@
 	"farmer":{"art":"farmer", "cardType":["Support"], "produces":"1G"},
 	"armorer":{"art":"armorer", "cardType":["Support"], "produces":"1R"},
 	"pope":{"art":"pope", "cardType":["Support"], "produces":"1W"},
-	"bear":{"art":"bear", "cardType":["Unit"], "cost":"CCG", "power":2, "shields":2},
-	"basilisk":{"art":"basilisk", "cardType":["Unit"], "cost":"CCCG", "power":2, "shields":5, "keywords":["Deathtouch"]},
-	"beast":{"art":"beast", "cardType":["Unit"], "cost":"CCCCG", "power":5, "shields":3},
+	"bear":{"art":"bear", "cardType":["Unit"], "cost":"CCG", "power":2, "toughness":2},
+	"basilisk":{"art":"basilisk", "cardType":["Unit"], "cost":"CCCG", "power":2, "toughness":5, "keywords":["Deathtouch"]},
+	"beast":{"art":"beast", "cardType":["Unit"], "cost":"CCCCG", "power":5, "toughness":3},
 	
-	"angel":{"art":"angel", "cardType":["Unit"], "cost":"CCCCCWW", "power":4, "shields":4, "keywords":["Flying"]},
-	"lion":{"art":"lion", "cardType":["Unit"], "cost":"CW", "power":2, "shields":1},
-	"cardinal":{"art":"cardinal", "cardType":["Unit"], "cost":"CCCW", "power":3, "shields":2, "activated":[
-		{"icon":"icon_heal", "frameColor":"FFFF88", "altcost":["Tap"], "target":["battlefield", ["control","you"], ["type","Unit"]], "effect":["heal", 1, "target"]}
+	"angel":{"art":"angel", "cardType":["Unit"], "cost":"CCCCCWW", "power":4, "toughness":4, "keywords":["Flying"]},
+	"lion":{"art":"lion", "cardType":["Unit"], "cost":"CW", "power":2, "toughness":1},
+	"cardinal":{"art":"cardinal", "cardType":["Unit"], "cost":"CCCW", "power":3, "toughness":2, "activated":[
+		{"icon":"icon_heal", "frameColor":"FFFF88", "altCost":["Tap"], "target":["battlefield", ["control","you"], ["type","Unit"]], "effect":["heal", 1, "target"]}
 	]},
 
-	"fox":{"art":"fox", "cardType":["Unit"], "cost":"CCR", "power":3, "shields":1, "activated":[
-		{"icon":"icon_damage", "frameColor":"FF0000", "manacost":"CCC", "target":["battlefield", ["control","opponent"], ["type","Unit"]], "effect":["damage", "source", 3, "target"]}
+	"fox":{"art":"fox", "cardType":["Unit"], "cost":"CCR", "power":3, "toughness":1, "activated":[
+		{"icon":"icon_damage", "frameColor":"FF0000", "manaCost":"CCC", "target":["battlefield", ["control","opponent"], ["type","Unit"]], "effect":["damage", "source", 3, "target"]}
 	]},
 
-	"baal":{"art":"baal", "cardType":["Unit"], "cost":"6RR", "power":5, "shields":5, "activated":[
-		{"icon":"icon_takecontrol", "frameColor":"FFFF88", "uses":1, "target":["battlefield", ["control","opponent"], ["type","Unit"]],
+	"baal":{"art":"baal", "cardType":["Unit"], "cost":"6RR", "power":5, "toughness":5,
+	"activated":[
+		{"icon":"icon_takecontrol",
+		"frameColor":"FFFF88",
+		"uses":1,
+		"text":"ONE SHOT - Untap and gain control of an enemy unit until your next turn.",
+		"target":["battlefield", ["control","opponent"], ["type","Unit"]],
 		"effect":["sequence",
 			["takecontrol", "you", "target", "YourNextTurn"],
 			["untap", "target"]
 		]}
 	]},
+	
+	"gnome":{"art":"gnome", "cardType":["Device"], "cost":"3",
+	"activated":[
+		{"icon":"icon_upgrade",
+		"frameColor":"88FF88",
+		"manaCost":"CCC", 
+		"altCost":["Tap"],
+		"text":"TAP - A unit gets +1/+1 permanently.",
+		"target":["battlefield", ["type","Unit"]],
+		"effect":["upgrade", "target", 1, 1]
+		}
+	]}
+	
+	"bomb":{"art":"bomb", "cardType":["Action"], "cost":"4W",
+		"text":"Kill a unit with power 4 or more.",
+		"target":["battlefield", ["type","Unit"], ["greaterOrEqual",["powerOf", "subject"], 4]],
+		"effect":["destroy", "target"]
+	}
   },
-  "mydeck": [ "farmer", "farmer", "farmer", "farmer", "farmer", "farmer", "farmer", "bear", "beast", "basilisk" ],
-  "oppdeck": [ "armorer", "armorer", "armorer", "armorer", "pope", "pope", "lion", "angel", "fox", "cardinal", "baal" ]
+  "mydeck": [ "farmer", "farmer", "farmer", "farmer", "farmer", "farmer", "farmer", "bear", "beast", "basilisk", "gnome" ],
+  "oppdeck": [ "armorer", "armorer", "armorer", "armorer", "pope", "pope", "lion", "bomb", "angel", "fox", "cardinal", "baal" ]
 //  "oppdeck": [ "pope", "pope", "pope", "pope", "pope", "pope", "lion", "angel", "lion", "cardinal" ]
 }

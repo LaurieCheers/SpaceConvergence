@@ -32,11 +32,11 @@ namespace SpaceConvergence
             if (template.hasKey("target"))
                 target = ConvergeSelector.New(template.getProperty("target"));
 
-            manacost = new ConvergeManaAmount(template.getString("manacost", ""));
+            manacost = new ConvergeManaAmount(template.getString("manaCost", ""));
             uses = template.getInt("uses", 0);
 
             altCost = 0;
-            foreach(string altcostString in template.getArray("altcost", JSONArray.empty).asStrings())
+            foreach(string altcostString in template.getArray("altCost", JSONArray.empty).asStrings())
             {
                 altCost |= (ConvergeAltCost)Enum.Parse(typeof(ConvergeAltCost), altcostString);
             }

@@ -11,6 +11,7 @@ namespace SpaceConvergence
     {
         public ConvergeObject source;
         public ConvergeObject target;
+        public ConvergeObject subject;
         public ConvergePlayer you;
 
         public ConvergeEffectContext(ConvergeObject source, ConvergePlayer you)
@@ -36,6 +37,10 @@ namespace SpaceConvergence
                     return new ConvergeCommand_TakeControl(template);
                 case "untap":
                     return new ConvergeCommand_Untap(template);
+                case "upgrade":
+                    return new ConvergeCommand_Upgrade(template);
+                case "destroy":
+                    return new ConvergeCommand_Destroy(template);
                 case "sequence":
                     return new ConvergeCommand_Sequence(template);
                 default:
@@ -143,6 +148,60 @@ namespace SpaceConvergence
         }
     }
 
+    public class ConvergeCommand_Upgrade : ConvergeCommand
+    {
+        ConvergeSelector patients;
+        ConvergeCalculation powerAmount;
+        ConvergeCalculation toughnessAmount;
+        ConvergeKeyword keywords;
+        ConvergeDuration duration;
+
+        public ConvergeCommand_Upgrade(JSONArray template)
+        {
+            patients = ConvergeSelector.New(template.getProperty(1));
+            powerAmount = ConvergeCalculation.New(template.getProperty(2));
+            toughnessAmount = ConvergeCalculation.New(template.getProperty(3));
+            if (template.Length >= 5)
+            {
+                keywords = template.getArray(4).ToKeywords();
+            }
+
+            if (template.Length == 6)
+                duration = (ConvergeDuration)Enum.Parse(typeof(ConvergeDuration), template.getString(5));
+            else
+                duration = ConvergeDuration.Permanent;
+        }
+
+        public override void Run(ConvergeEffectContext context)
+        {
+            int power = powerAmount.GetValue(context);
+            int toughness = toughnessAmount.GetValue(context);
+
+            foreach (ConvergeObject patient in patients.GetList(context))
+            {
+                patient.AddEffect(new ConvergeEffect_Upgrade(power, toughness, keywords, context.source, duration));
+            }
+        }
+    }
+
+    public class ConvergeCommand_Destroy : ConvergeCommand
+    {
+        ConvergeSelector victims;
+
+        public ConvergeCommand_Destroy(JSONArray template)
+        {
+            victims = ConvergeSelector.New(template.getProperty(1));
+        }
+
+        public override void Run(ConvergeEffectContext context)
+        {
+            foreach(ConvergeObject victim in victims.GetList(context))
+            {
+                victim.destroyed = true;
+            }
+        }
+    }
+
     public class ConvergeCommand_Sequence : ConvergeCommand
     {
         List<ConvergeCommand> commands;
@@ -169,7 +228,10 @@ namespace SpaceConvergence
 
     public abstract class ConvergeSelector
     {
-        public abstract List<ConvergeObject> GetList(ConvergeEffectContext context);
+        public virtual List<ConvergeObject> GetList(ConvergeEffectContext context)
+        {
+            throw new NotImplementedException();
+        }
         public abstract bool Test(ConvergeObject subject, ConvergeEffectContext context);
 
         public virtual void Filter(List<ConvergeObject> list, ConvergeEffectContext context)
@@ -197,6 +259,8 @@ namespace SpaceConvergence
                         return new ConvergeSelector_Opponent();
                     case "target":
                         return new ConvergeSelector_Target();
+                    case "subject":
+                        return new ConvergeSelector_Subject();
                     default:
                         throw new ArgumentException();
                 }
@@ -214,6 +278,13 @@ namespace SpaceConvergence
                         return new ConvergeSelector_Control(arrayTemplate);
                     case "battlefield":
                         return new ConvergeSelector_Battlefield(arrayTemplate);
+                    case "equal":
+                    case "notEqual":
+                    case "less":
+                    case "greater":
+                    case "lessOrEqual":
+                    case "greaterOrEqual":
+                        return new ConvergeSelector_Compare(arrayTemplate);
                     default:
                         throw new ArgumentException();
                 }
@@ -273,6 +344,18 @@ namespace SpaceConvergence
         }
     }
 
+    public class ConvergeSelector_Subject : ConvergeSelector
+    {
+        public override List<ConvergeObject> GetList(ConvergeEffectContext context)
+        {
+            return new List<ConvergeObject> { context.subject };
+        }
+        public override bool Test(ConvergeObject subject, ConvergeEffectContext context)
+        {
+            return context.subject == subject;
+        }
+    }
+
     public class ConvergeSelector_AllOf: ConvergeSelector
     {
         List<ConvergeSelector> cases;
@@ -328,14 +411,50 @@ namespace SpaceConvergence
                 type |= (ConvergeCardType)Enum.Parse(typeof(ConvergeCardType), template.getString(Idx));
             }
         }
-        public override List<ConvergeObject> GetList(ConvergeEffectContext context)
-        {
-            return null;
-        }
         public override bool Test(ConvergeObject subject, ConvergeEffectContext context)
         {
             // TBD: "all" or "any"?
             return (subject.cardType & type) != 0;
+        }
+    }
+
+    public enum ConvergeComparison
+    {
+        equal,
+        notEqual,
+        less,
+        greater,
+        lessOrEqual,
+        greaterOrEqual,
+    }
+
+    public class ConvergeSelector_Compare : ConvergeSelector
+    {
+        ConvergeCalculation a;
+        ConvergeComparison comparison;
+        ConvergeCalculation b;
+
+        public ConvergeSelector_Compare(JSONArray template)
+        {
+            comparison = (ConvergeComparison)Enum.Parse(typeof(ConvergeComparison), template.getString(0));
+            a = ConvergeCalculation.New(template.getProperty(1));
+            b = ConvergeCalculation.New(template.getProperty(2));
+        }
+        public override bool Test(ConvergeObject subject, ConvergeEffectContext context)
+        {
+            context.subject = subject;
+            int aValue = a.GetValue(context);
+            int bValue = b.GetValue(context);
+            switch(comparison)
+            {
+                case ConvergeComparison.equal: return aValue == bValue;
+                case ConvergeComparison.notEqual: return aValue != bValue;
+                case ConvergeComparison.greater: return aValue > bValue;
+                case ConvergeComparison.less: return aValue < bValue;
+                case ConvergeComparison.greaterOrEqual: return aValue >= bValue;
+                case ConvergeComparison.lessOrEqual: return aValue <= bValue;
+                default: throw new NotImplementedException();
+            }
         }
     }
 
@@ -347,12 +466,9 @@ namespace SpaceConvergence
         {
             controller = ConvergeSelector.New(template.getProperty(1));
         }
-        public override List<ConvergeObject> GetList(ConvergeEffectContext context)
-        {
-            return null;
-        }
         public override bool Test(ConvergeObject subject, ConvergeEffectContext context)
         {
+            context.subject = subject;
             foreach(ConvergeObject potentialController in controller.GetList(context))
             {
                 if (potentialController.controller == subject.controller)
@@ -410,6 +526,17 @@ namespace SpaceConvergence
             {
                 return new ConvergeCalculation_Constant((int)(double)template);
             }
+            else if(template is object[])
+            {
+                JSONArray array = new JSONArray((object[])template);
+                switch(array.getString(0))
+                {
+                    case "powerOf":
+                        return new ConvergeCalculation_Power(array);
+                    default:
+                        throw new ArgumentException();
+                }
+            }
             else
             {
                 throw new ArgumentException();
@@ -429,6 +556,26 @@ namespace SpaceConvergence
         public override int GetValue(ConvergeEffectContext context)
         {
             return constant;
+        }
+    }
+
+    public class ConvergeCalculation_Power : ConvergeCalculation
+    {
+        ConvergeSelector select;
+
+        public ConvergeCalculation_Power(JSONArray template)
+        {
+            select = ConvergeSelector.New(template.getProperty(1));
+        }
+
+        public override int GetValue(ConvergeEffectContext context)
+        {
+            int total = 0;
+            foreach(ConvergeObject obj in select.GetList(context))
+            {
+                total += obj.power;
+            }
+            return total;
         }
     }
 }
