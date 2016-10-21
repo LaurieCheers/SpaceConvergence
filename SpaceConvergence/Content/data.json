@@ -35,7 +35,7 @@
 	"cardinal":{"art":"cardinal", "cardType":["Unit"], "cost":"CCCW", "power":3, "shields":2},
 
 	"fox":{"art":"fox", "cardType":["Unit"], "cost":"CCR", "power":3, "shields":1, "activated":[
-		{"icon":"damage_icon", "effect":["damage", "source", 3, "opponent"]}
+		{"icon":"damage_icon", "cost":"CCC", "effect":["damage", "source", 3, "opponent"]}
 	]},
   },
   "mydeck": [ "farmer", "farmer", "farmer", "farmer", "farmer", "farmer", "farmer", "bear", "beast", "basilisk" ],

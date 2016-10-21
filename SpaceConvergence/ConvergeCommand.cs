@@ -53,6 +53,13 @@ namespace SpaceConvergence
     public class ConvergeEffectContext
     {
         public ConvergeObject source;
+        public ConvergePlayer you;
+
+        public ConvergeEffectContext(ConvergeObject source, ConvergePlayer you)
+        {
+            this.source = source;
+            this.you = you;
+        }
     }
 
     public abstract class ConvergeSelector
@@ -65,12 +72,26 @@ namespace SpaceConvergence
             {
                 switch((string)template)
                 {
+                    case "source":
+                        return new ConvergeSelector_Source();
                     case "opponent":
                         return new ConvergeSelector_Opponent();
+                    default:
+                        throw new ArgumentException();
                 }
             }
+            else
+            {
+                throw new ArgumentException();
+            }
+        }
+    }
 
-            return null;
+    public class ConvergeSelector_Source : ConvergeSelector
+    {
+        public override List<ConvergeObject> GetList(ConvergeEffectContext context)
+        {
+            return new List<ConvergeObject> { context.source };
         }
     }
 
@@ -94,8 +115,14 @@ namespace SpaceConvergence
             {
                 return new ConvergeCalculation_Constant((int)template);
             }
-
-            return null;
+            else if (template is double)
+            {
+                return new ConvergeCalculation_Constant((int)(double)template);
+            }
+            else
+            {
+                throw new ArgumentException();
+            }
         }
     }
 

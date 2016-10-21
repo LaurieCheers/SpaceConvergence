@@ -85,7 +85,7 @@ namespace SpaceConvergence
         public readonly ConvergeManaAmount produces;
         public readonly ConvergeManaAmount cost;
         public readonly ConvergeKeyword keywords;
-        public readonly List<ConvergeActivatedAbility> activatedAbilities;
+        public readonly List<ConvergeActivatedAbilitySpec> activatedAbilities;
 
         public ConvergeCardSpec(JSONTable template, ContentManager Content)
         {
@@ -115,10 +115,10 @@ namespace SpaceConvergence
                 keywords |= (ConvergeKeyword)Enum.Parse(typeof(ConvergeKeyword), name);
             }
 
-            activatedAbilities = new List<ConvergeActivatedAbility>();
+            activatedAbilities = new List<ConvergeActivatedAbilitySpec>();
             foreach(JSONTable abilityTemplate in template.getArray("activated", JSONArray.empty).asJSONTables())
             {
-                activatedAbilities.Add(new ConvergeActivatedAbility(abilityTemplate, Content));
+                activatedAbilities.Add(new ConvergeActivatedAbilitySpec(abilityTemplate, Content));
             }
         }
     }
@@ -134,7 +134,6 @@ namespace SpaceConvergence
         public ConvergeManaAmount cost { get { return original.cost; } }
         public ConvergeZone zone;
         public ConvergeKeyword keywords { get { return original.keywords; } }
-        public List<ConvergeActivatedAbility> activatedAbilities { get { return original.activatedAbilities; } }
         public int slot;
         public ConvergeUIObject ui;
         public delegate void DealsDamage(ConvergeObject source, ConvergeObject target, int damageDealt, bool isCombatDamage);
@@ -144,6 +143,7 @@ namespace SpaceConvergence
         public int wounds;
         public bool tapped;
         public bool dead;
+        public List<ConvergeActivatedAbility> activatedAbilities;
 
         public Vector2 nominalPosition
         {
@@ -155,6 +155,11 @@ namespace SpaceConvergence
             this.original = original;
             this.shields = maxShields;
             this.wounds = 0;
+            activatedAbilities = new List<ConvergeActivatedAbility>();
+            foreach(ConvergeActivatedAbilitySpec spec in original.activatedAbilities)
+            {
+                activatedAbilities.Add(new ConvergeActivatedAbility(spec, this));
+            }
             MoveZone(zone);
         }
 

@@ -11,20 +11,27 @@ namespace SpaceConvergence
 {
     public class ConvergeUIObject : UIElement
     {
-        ConvergeObject represented;
-        Rectangle gfxFrame;
+        public readonly ConvergeObject represented;
+        public Rectangle gfxFrame;
         bool isMouseOver;
         bool isMousePressing;
         bool isDragging;
         Vector2 mousePressedPos;
         bool isVisible;
-        List<ConvergeUIAbility> abilityUIs;
+        List<ConvergeUIAbility> abilityUIs = new List<ConvergeUIAbility>();
 
         public ConvergeUIObject(ConvergeObject represented)
         {
             this.represented = represented;
             represented.ui = this;
             this.gfxFrame = new Rectangle(represented.nominalPosition.ToPoint(), new Point(50, 60));
+
+            Vector2 offset = new Vector2(this.gfxFrame.Width / 2, 0);
+            foreach(ConvergeActivatedAbility ability in represented.activatedAbilities)
+            {
+                abilityUIs.Add(new ConvergeUIAbility(ability, offset, this));
+                offset.X += 32.0f;
+            }
         }
 
         public override void Update(InputState inputState, Vector2 origin)
@@ -109,6 +116,11 @@ namespace SpaceConvergence
                     this.gfxFrame = new Rectangle((this.gfxFrame.XY() + moveOffset * MOVESPEED).ToPoint(), new Point(50, 60));
                 }
             }
+
+            foreach(ConvergeUIAbility abilityUI in abilityUIs)
+            {
+                abilityUI.Update(inputState);
+            }
         }
 
         public override UIMouseResponder GetMouseHover(Vector2 pos)
@@ -160,13 +172,6 @@ namespace SpaceConvergence
             if (represented.tapped)
             {
                 spriteBatch.Draw(Game1.tappedicon, new Vector2(gfxFrame.Right - 16, gfxFrame.Top), Color.White);
-            }
-
-            Vector2 iconPos = new Vector2(gfxFrame.Center.X, gfxFrame.Top);
-            foreach (ConvergeActivatedAbility ability in represented.activatedAbilities)
-            {
-                ability.Draw(spriteBatch, iconPos);
-                iconPos.X += 32;
             }
 
             if (represented.zone.zoneId == ConvergeZoneId.DiscardPile)
@@ -235,6 +240,11 @@ namespace SpaceConvergence
             {
                 spriteBatch.Draw(Game1.mouseOverGlow, gfxFrame, highlightColor);
             }
+
+            foreach (ConvergeUIAbility abilityUI in abilityUIs)
+            {
+                abilityUI.Draw(spriteBatch);
+            }
         }
     }
 
@@ -242,7 +252,13 @@ namespace SpaceConvergence
     {
         ConvergeActivatedAbility ability;
         ConvergeUIObject parent;
+        Rectangle frame;
         Vector2 offset;
+        Vector2 draggedTo;
+        bool isMouseOver;
+        bool isMousePressing;
+        bool isDragging;
+        bool isVisible;
 
         public ConvergeUIAbility(ConvergeActivatedAbility ability, Vector2 offset, ConvergeUIObject parent)
         {
@@ -251,12 +267,59 @@ namespace SpaceConvergence
             this.parent = parent;
         }
 
+        public void Update(InputState inputState)
+        {
+            frame = new Rectangle(parent.gfxFrame.Left+(int)offset.X - 16, parent.gfxFrame.Top+(int)offset.Y - 16, 32, 32);
+
+            isMouseOver = (inputState.hoveringElement == this);
+
+            if (isMouseOver && inputState.mouseLeft.justPressed && ability.controller.isActivePlayer)
+            {
+                isMousePressing = true;
+            }
+
+            if (isMousePressing && !inputState.mouseLeft.isDown)
+            {
+                isMousePressing = false;
+
+                if (ability.hasTarget)
+                {
+                    if (inputState.hoveringElement != null)
+                    {
+                        // used on target
+                        if(inputState.hoveringElement is ConvergeUIObject)
+                        {
+                            ability.ActivateOn(((ConvergeUIObject)inputState.hoveringElement).represented);
+                        }
+                    }
+                }
+                else
+                {
+                    ability.Activate(Game1.activePlayer);
+                }
+            }
+        }
+
         public UIMouseResponder GetMouseHover(Vector2 pos)
         {
-            if( Math.Abs(pos.X - offset.X) < 16 && Math.Abs(pos.Y - offset.Y) < 16)
+            if (!ability.isActive)
+                return null;
+
+            if (isMousePressing && ability.hasTarget)
+                return null;
+
+            if( frame.Contains(pos) )
                 return this;
 
             return null;
+        }
+
+        public void Draw(SpriteBatch spriteBatch)
+        {
+            if (!ability.isActive)
+                return;
+
+            ability.Draw(spriteBatch, isMouseOver, frame);
         }
     }
 }
