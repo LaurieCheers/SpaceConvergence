@@ -26,7 +26,7 @@ namespace SpaceConvergence
             represented.ui = this;
             this.gfxFrame = new Rectangle(represented.nominalPosition.ToPoint(), new Point(50, 60));
 
-            Vector2 offset = new Vector2(this.gfxFrame.Width / 2, 0);
+            Vector2 offset = new Vector2(this.gfxFrame.Width / 2, 12);
             foreach(ConvergeActivatedAbility ability in represented.activatedAbilities)
             {
                 abilityUIs.Add(new ConvergeUIAbility(ability, offset, this));
@@ -44,14 +44,14 @@ namespace SpaceConvergence
             }
 
             isMouseOver = (inputState.hoveringElement == this);
-            if (isMouseOver && inputState.mouseLeft.justPressed && represented.zone.owner.isActivePlayer)
+            if (isMouseOver && inputState.mouseLeft.justPressed && represented.controller.isActivePlayer)
             {
                 isMousePressing = true;
                 mousePressedPos = inputState.MousePos;
             }
 
             if (isMousePressing && isMouseOver && inputState.mouseLeft.justReleased)
-                represented.Play(); // clicked
+                represented.Play(Game1.activePlayer); // clicked
 
             if (!inputState.mouseLeft.isDown)
                 isMousePressing = false;
@@ -77,8 +77,8 @@ namespace SpaceConvergence
                     else
                     {
                         ConvergeZone currentZone = represented.zone;
-                        ConvergeZone attackZone = represented.zone.owner.attack;
-                        ConvergeZone defenseZone = represented.zone.owner.defense;
+                        ConvergeZone attackZone = represented.controller.attack;
+                        ConvergeZone defenseZone = represented.controller.defense;
                         if (currentZone.zoneId == ConvergeZoneId.Defense && attackZone.bounds.Contains(inputState.MousePos))
                         {
                             represented.EnterAttack();
@@ -89,7 +89,7 @@ namespace SpaceConvergence
                         }
                         else if(currentZone.zoneId == ConvergeZoneId.Hand && defenseZone.bounds.Contains(inputState.MousePos))
                         {
-                            represented.Play();
+                            represented.Play(represented.controller);
                         }
                     }
 
@@ -151,6 +151,8 @@ namespace SpaceConvergence
             if (!isVisible)
                 return;
 
+            ConvergePlayer controller = represented.controller;
+
             Texture2D art = represented.art;
             Color artTint = Color.White;
             if (represented.zone.zoneId == ConvergeZoneId.DiscardPile)
@@ -165,7 +167,7 @@ namespace SpaceConvergence
                 artTint,
                 0.0f,
                 Vector2.Zero,
-                represented.zone.owner.faceLeft ? SpriteEffects.FlipHorizontally : SpriteEffects.None,
+                controller.faceLeft ? SpriteEffects.FlipHorizontally : SpriteEffects.None,
                 0.0f
             );
 
@@ -203,21 +205,21 @@ namespace SpaceConvergence
 
             if (represented.cardType.HasFlag(ConvergeCardType.Home))
             {
-                spriteBatch.DrawString(Game1.font, "" + represented.zone.owner.life, new Vector2(gfxFrame.Center.X, gfxFrame.Top + 20), TextAlignment.CENTER, Color.Black);
+                spriteBatch.DrawString(Game1.font, "" + controller.life, new Vector2(gfxFrame.Center.X, gfxFrame.Top + 20), TextAlignment.CENTER, Color.Black);
 
                 Vector2 resourcePos;
-                if (represented.zone.owner.faceLeft)
+                if (controller.faceLeft)
                     resourcePos = new Vector2(gfxFrame.Left, gfxFrame.Bottom);
                 else
                     resourcePos = new Vector2(gfxFrame.Center.X, gfxFrame.Bottom);
-                represented.zone.owner.resources.DrawResources(spriteBatch, represented.zone.owner.resourcesSpent, resourcePos);
+                controller.resources.DrawResources(spriteBatch, controller.resourcesSpent, resourcePos);
             }
 
             bool drawHighlight = isMouseOver;
             Color highlightColor = Color.White;
             if (represented.zone.zoneId == ConvergeZoneId.Hand)
             {
-                if (represented.CanBePlayed())
+                if (represented.CanBePlayed(Game1.activePlayer))
                 {
                     drawHighlight = true;
                     if (isMouseOver)
@@ -231,7 +233,7 @@ namespace SpaceConvergence
                     represented.cost.DrawCost(spriteBatch, new Vector2(gfxFrame.Left, gfxFrame.Top));
                 }
             }
-            else if (drawHighlight && !represented.zone.owner.isActivePlayer)
+            else if (drawHighlight && !controller.isActivePlayer)
             {
                 highlightColor = Color.Red;
             }
@@ -255,6 +257,13 @@ namespace SpaceConvergence
         Rectangle frame;
         Vector2 offset;
         Vector2 draggedTo;
+
+        bool beamVisible;
+        bool beamBad;
+        Rectangle beamRect;
+        Rectangle beamArrowRect;
+        float beamRotation;
+        
         bool isMouseOver;
         bool isMousePressing;
         bool isDragging;
@@ -273,10 +282,38 @@ namespace SpaceConvergence
 
             isMouseOver = (inputState.hoveringElement == this);
 
-            if (isMouseOver && inputState.mouseLeft.justPressed && ability.controller.isActivePlayer)
+            if (isMouseOver &&
+                inputState.mouseLeft.justPressed &&
+                ability.controller.isActivePlayer &&
+                ability.CanActivate(Game1.activePlayer))
             {
                 isMousePressing = true;
             }
+
+            if(isMousePressing && ability.hasTarget)
+            {
+                beamVisible = true;
+
+                Vector2 offset = inputState.MousePos - frame.Center.ToVector2();
+                beamRotation = offset.ToAngle();
+                beamRect = new Rectangle(frame.Center.X, frame.Center.Y, (int)offset.Length(), 16);
+                beamArrowRect = new Rectangle((int)inputState.MousePos.X, (int)inputState.MousePos.Y, 16, 16);
+
+                if (inputState.hoveringElement != null && inputState.hoveringElement is ConvergeUIObject)
+                {
+                    ConvergeObject targetedObject = ((ConvergeUIObject)inputState.hoveringElement).represented;
+                    beamBad = !ability.CanTarget(targetedObject, Game1.activePlayer);
+                }
+                else
+                {
+                    beamBad = false;
+                }
+            }
+            else
+            {
+                beamVisible = false;
+            }
+
 
             if (isMousePressing && !inputState.mouseLeft.isDown)
             {
@@ -289,7 +326,7 @@ namespace SpaceConvergence
                         // used on target
                         if(inputState.hoveringElement is ConvergeUIObject)
                         {
-                            ability.ActivateOn(((ConvergeUIObject)inputState.hoveringElement).represented);
+                            ability.ActivateOn(((ConvergeUIObject)inputState.hoveringElement).represented, Game1.activePlayer);
                         }
                     }
                 }
@@ -305,9 +342,6 @@ namespace SpaceConvergence
             if (!ability.isActive)
                 return null;
 
-            if (isMousePressing && ability.hasTarget)
-                return null;
-
             if( frame.Contains(pos) )
                 return this;
 
@@ -318,6 +352,20 @@ namespace SpaceConvergence
         {
             if (!ability.isActive)
                 return;
+
+            if(beamVisible)
+            {
+                if (beamBad)
+                {
+                    spriteBatch.Draw(Game1.badTargetBeam, beamRect, null, Color.White, beamRotation, new Vector2(0, 8), SpriteEffects.None, 0.0f);
+                    spriteBatch.Draw(Game1.badTargetArrow, beamArrowRect, null, Color.White, beamRotation, new Vector2(8, 8), SpriteEffects.None, 0.0f);
+                }
+                else
+                {
+                    spriteBatch.Draw(Game1.targetBeam, beamRect, null, Color.White, beamRotation, new Vector2(0, 8), SpriteEffects.None, 0.0f);
+                    spriteBatch.Draw(Game1.targetArrow, beamArrowRect, null, Color.White, beamRotation, new Vector2(8, 8), SpriteEffects.None, 0.0f);
+                }
+            }
 
             ability.Draw(spriteBatch, isMouseOver, frame);
         }

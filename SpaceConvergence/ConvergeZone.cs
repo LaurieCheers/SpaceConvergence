@@ -35,16 +35,21 @@ namespace SpaceConvergence
 
         public void Add(ConvergeObject newObj)
         {
-            if (newObj.zone != null)
-                newObj.zone.Remove(newObj);
+            ConvergeZone oldZone = newObj.zone;
+            if (oldZone != null)
+                oldZone.Remove(newObj);
 
             newObj.slot = contents.Count;
             newObj.zone = this;
             contents.Add(newObj);
             newlyAdded.Add(newObj);
-            if (!inPlay)
-                newObj.ClearOnLeavingPlay();
+
             RenumberAll();
+
+            if (!inPlay && oldZone != null && oldZone.inPlay)
+                newObj.OnLeavingPlay();
+            else if(inPlay && (oldZone == null || !oldZone.inPlay))
+                newObj.OnEnteringPlay();
         }
 
         public void Remove(ConvergeObject oldObj)
@@ -79,20 +84,20 @@ namespace SpaceConvergence
             return basePos + slotOffset * slot;// + (slot%2==0?new Vector2(10,0):new Vector2(-10,0));
         }
 
-        public void BeginTurn()
+        public void BeginMyTurn()
         {
             foreach (ConvergeObject obj in contents)
             {
-                obj.BeginTurn();
+                obj.BeginMyTurn();
             }
         }
 
-        public void EndTurn()
+        public void EndMyTurn()
         {
             List<ConvergeObject> deaders = new List<ConvergeObject>();
             foreach (ConvergeObject obj in contents)
             {
-                obj.EndTurn();
+                obj.EndMyTurn();
                 if (obj.dead)
                     deaders.Add(obj);
             }

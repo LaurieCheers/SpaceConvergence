@@ -27,6 +27,7 @@ namespace SpaceConvergence
 
         ConvergePlayer self;
         ConvergePlayer opponent;
+        public static List<ConvergeObject> inPlayList = new List<ConvergeObject>();
 
         public static SpriteFont font;
         public static Texture2D powerbg;
@@ -35,6 +36,10 @@ namespace SpaceConvergence
         public static Texture2D tappedicon;
         public static Texture2D[] resourceTextures;
         public static Texture2D abilityHighlight;
+        public static Texture2D targetArrow;
+        public static Texture2D targetBeam;
+        public static Texture2D badTargetArrow;
+        public static Texture2D badTargetBeam;
 
         public static RichImage mouseOverGlow;
 
@@ -78,6 +83,10 @@ namespace SpaceConvergence
             woundbg = Content.Load<Texture2D>("woundbg");
             tappedicon = Content.Load<Texture2D>("tapped");
             abilityHighlight = Content.Load<Texture2D>("abilityHighlight");
+            targetArrow = Content.Load<Texture2D>("targetArrow");
+            targetBeam = Content.Load<Texture2D>("targetBeam");
+            badTargetArrow = Content.Load<Texture2D>("badTargetArrow");
+            badTargetBeam = Content.Load<Texture2D>("badTargetBeam");
 
             resourceTextures = new Texture2D[]
             {
@@ -129,14 +138,19 @@ namespace SpaceConvergence
             opponent.BeginGame();
 
             activePlayer = self;
-            self.BeginTurn();
+            self.BeginMyTurn();
         }
 
         public void EndTurn_onPress()
         {
-            activePlayer.EndTurn();
+            activePlayer.EndMyTurn();
             activePlayer = activePlayer.opponent;
-            activePlayer.BeginTurn();
+            activePlayer.BeginMyTurn();
+
+            foreach (ConvergeObject obj in Game1.inPlayList)
+            {
+                obj.BeginAnyTurn(activePlayer);
+            }
         }
 
         /// <summary>

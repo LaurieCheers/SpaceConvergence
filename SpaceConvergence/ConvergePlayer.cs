@@ -96,21 +96,21 @@ namespace SpaceConvergence
             DrawCards(7);
         }
 
-        public void BeginTurn()
+        public void BeginMyTurn()
         {
             resourcesSpent.Clear();
             numLandsPlayed = 0;
-            attack.BeginTurn();
-            defense.BeginTurn();
-            home.BeginTurn();
+            attack.BeginMyTurn();
+            defense.BeginMyTurn();
+            home.BeginMyTurn();
             DrawCards(1);
         }
 
-        public void EndTurn()
+        public void EndMyTurn()
         {
-            attack.EndTurn();
-            defense.EndTurn();
-            home.EndTurn();
+            attack.EndMyTurn();
+            defense.EndMyTurn();
+            home.EndMyTurn();
         }
     }
 }

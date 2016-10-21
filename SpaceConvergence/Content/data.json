@@ -32,13 +32,23 @@
 	
 	"angel":{"art":"angel", "cardType":["Unit"], "cost":"CCCCCWW", "power":4, "shields":4, "keywords":["Flying"]},
 	"lion":{"art":"lion", "cardType":["Unit"], "cost":"CW", "power":2, "shields":1},
-	"cardinal":{"art":"cardinal", "cardType":["Unit"], "cost":"CCCW", "power":3, "shields":2},
+	"cardinal":{"art":"cardinal", "cardType":["Unit"], "cost":"CCCW", "power":3, "shields":2, "activated":[
+		{"icon":"icon_heal", "frameColor":"FFFF88", "altcost":["Tap"], "target":["battlefield", ["control","you"], ["type","Unit"]], "effect":["heal", 1, "target"]}
+	]},
 
 	"fox":{"art":"fox", "cardType":["Unit"], "cost":"CCR", "power":3, "shields":1, "activated":[
-		{"icon":"damage_icon", "cost":"CCC", "effect":["damage", "source", 3, "opponent"]}
+		{"icon":"icon_damage", "frameColor":"FF0000", "manacost":"CCC", "target":["battlefield", ["control","opponent"], ["type","Unit"]], "effect":["damage", "source", 3, "target"]}
+	]},
+
+	"baal":{"art":"baal", "cardType":["Unit"], "cost":"6RR", "power":5, "shields":5, "activated":[
+		{"icon":"icon_takecontrol", "frameColor":"FFFF88", "uses":1, "target":["battlefield", ["control","opponent"], ["type","Unit"]],
+		"effect":["sequence",
+			["takecontrol", "you", "target", "YourNextTurn"],
+			["untap", "target"]
+		]}
 	]},
   },
   "mydeck": [ "farmer", "farmer", "farmer", "farmer", "farmer", "farmer", "farmer", "bear", "beast", "basilisk" ],
-  "oppdeck": [ "armorer", "armorer", "armorer", "armorer", "pope", "pope", "lion", "angel", "fox", "cardinal", "fox" ]
+  "oppdeck": [ "armorer", "armorer", "armorer", "armorer", "pope", "pope", "lion", "angel", "fox", "cardinal", "baal" ]
 //  "oppdeck": [ "pope", "pope", "pope", "pope", "pope", "pope", "lion", "angel", "lion", "cardinal" ]
 }
