@@ -111,6 +111,14 @@ namespace LRCEngine
             return (string)array[idx];
         }
 
+        public string getString(int idx, string defaultValue)
+        {
+            if (array.Length > idx)
+                return (string)array[idx];
+            else
+                return defaultValue;
+        }
+
         public bool getBool(int idx)
         {
             return (bool)array[idx];

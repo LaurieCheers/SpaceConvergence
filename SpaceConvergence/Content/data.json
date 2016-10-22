@@ -26,6 +26,7 @@
 	"farmer":{"art":"farmer", "cardType":["Support"], "produces":"1G"},
 	"armorer":{"art":"armorer", "cardType":["Support"], "produces":"1R"},
 	"pope":{"art":"pope", "cardType":["Support"], "produces":"1W"},
+	"frontiersman":{"art":"frontiersman", "cardType":["Support"], "produces":"1GR"},
 	"bear":{"art":"bear", "cardType":["Unit"], "cost":"CCG", "power":2, "toughness":2},
 	"basilisk":{"art":"basilisk", "cardType":["Unit"], "cost":"CCCG", "power":2, "toughness":5, "keywords":["Deathtouch"]},
 	"beast":{"art":"beast", "cardType":["Unit"], "cost":"CCCCG", "power":5, "toughness":3},
@@ -48,7 +49,7 @@
 		"text":"ONE SHOT - Untap and gain control of an enemy unit until your next turn.",
 		"target":["battlefield", ["control","opponent"], ["type","Unit"]],
 		"effect":["sequence",
-			["takecontrol", "you", "target", "YourNextTurn"],
+			["takeControl", "you", "target", "YourNextTurn"],
 			["untap", "target"]
 		]}
 	]},
@@ -69,6 +70,12 @@
 		"text":"Kill a unit with power 4 or more.",
 		"target":["battlefield", ["type","Unit"], ["greaterOrEqual",["powerOf", "subject"], 4]],
 		"effect":["destroy", "target"]
+	}
+	
+	"trap":{"art":"trap", "cardType":["Action"], "cost":"1W",
+		"text":"Controller of an attacking unit gains life equal to its toughness. Kill it.",
+		"target":["zone", "opponent", "Attack"],
+		"effect":["sequence", ["gainLife", "target", ["toughnessOf", "target"]], ["destroy", "target"]]
 	}
 	
 	"satyr":{"art":"satyr", "cardType":["Unit"], "cost":"CCG", "power":2, "toughness":1, "activated":[
@@ -100,15 +107,131 @@
 		"condition":["greaterOrEqual", "triggerAmount", 6],
 		"effect":["grantActivated","source","YourNextTurn",{
 			"icon":"icon_damage",
-			"frameColor":"444444",
+			"frameColor":"779977",
 			"text":"Destroy a support.",
 			"uses":1,
 			"target":["battlefield", ["type","Support"]],
 			"effect":["destroy", "target"]
 		}]
 	}]},
+	
+	"yak":{"art":"yak", "cardType":["Unit"], "cost":"6RG", "power":6, "toughness":3, "activated":[
+		{"icon":"icon_cycle",
+		"frameColor":"0088FF",
+		"manaCost":"2", 
+		"activeZones":["Hand"],
+		"altCost":["Discard"],
+		"text":"Discard this to draw a frontiersman.",
+		"effect":["spawn", "you", "frontiersman", "Hand"]
+		}
+	]},
+	
+	"ogre_guard":{"art":"ogre_guard", "cardType":["Unit"], "cost":"5W", "power":2, "toughness":5, "keywords":["Vigilance"]},
+	"pegasus":{"art":"pegasus", "cardType":["Unit"], "cost":"2W", "power":1, "toughness":1, "keywords":["Flying"]},
+	"knight":{"art":"knight", "cardType":["Unit"], "cost":"5WW", "power":2, "toughness":4, "keywords":["Vigilance", "Lifelink"]},
+	"fencer":{"art":"fencer", "cardType":["Unit"], "cost":"2W", "power":1, "toughness":1, "keywords":["DoubleStrike"]},
+	"dwarf":{"art":"dwarf", "cardType":["Unit"], "cost":"2W", "power":2, "toughness":1, "keywords":["Vigilance"]},
+	"sniper":{"art":"sniper", "cardType":["Unit"], "cost":"6RR", "power":6, "toughness":1, "keywords":["Haste"], "activated":[
+		{"icon":"icon_damage",
+		"frameColor":"FF0000",
+		"altCost":["Tap"],
+		"text":"Deal 3 damage.",
+		"target":["battlefield", ["control","opponent"], ["type","Unit"]],
+		"effect":["damage", "source", 3, "target"]
+		}
+	]},
+	"ringmaster":{"art":"ringmaster", "cardType":["Unit"], "cost":"2WR", "power":1, "toughness":1, "activated":[
+		{"icon":"icon_damage",
+		"frameColor":"FF0000",
+		"manaCost":"1",
+		"altCost":["Tap"],
+		"text":"Deal 1 damage and make an attacker retreat.",
+		"target":["battlefield", ["control","opponent"], ["type","Unit"]],
+		"effect":["sequence", ["damage", "source", 1, "target"], ["retreat", "target"]]
+		}
+	]},
+	"robot":{"art":"robot", "cardType":["Unit"], "cost":"2WR", "power":2, "toughness":2, "keywords":["Vigilance"], "activated":[
+		{"icon":"icon_upgrade",
+		"frameColor":"FF0000",
+		"manaCost":"4WWRR",
+		"text":"Gain +2/+0 and First Strike until your next turn.",
+		"effect":["upgrade", "source", 2, 0, ["FirstStrike"], "YourNextTurn"]
+		}
+	]},
+
   },
-  "mydeck": [ "farmer", "farmer", "farmer", "farmer", "farmer", "farmer", "armorer", "bear", "beast", "basilisk", "gnome", "satyr", "mammoth" ],
-  "oppdeck": [ "armorer", "armorer", "armorer", "armorer", "pope", "pope", "king", "lion", "bomb", "angel", "fox", "cardinal", "baal", "mutagen" ]
+  "mydeck": [
+	"farmer", "farmer", "farmer", "farmer", "farmer", "farmer", "farmer", "farmer", "farmer", "farmer", "farmer",
+	"armorer", "armorer","armorer","armorer","armorer","armorer","armorer","armorer","armorer","armorer",
+	"frontiersman", "frontiersman",
+	// llanowar reborn x2
+	// skarrg the rage pits
+	
+	// blood ogre x2
+	"baal",
+	// crater hellion
+	// crowned ceratok
+	// deadly recluse x2
+	"mammoth",
+	// ghor-clan savage
+	// gore-horn minotaurs
+	// kavu predator
+	// krosan tusker
+	// orcish lumberjack
+	// polukranos
+	"satyr",
+	// skarrgan firebird
+	// skarrgan skybreaker
+	// troll ascetic
+	"yak",
+	// zhur-taa druid
+	// prey upon
+	// pyroclasm
+	// regrowth
+	// beast within
+	// destructive revelry
+	// shower of sparks
+	// terrifying presence
+	// volt charge
+	"gnome",
+	// fires of yavimaya
+	],
+	//"bear", "beast", "basilisk",
+  "oppdeck": [
+	"armorer","armorer","armorer","armorer","armorer","armorer","armorer","armorer","armorer","armorer","armorer",
+	"pope","pope","pope","pope","pope","pope","pope","pope","pope",
+	"frontiersman","frontiersman", // should be red/white
+	// new benalia?
+	"king",
+	"ogre_guard","ogre_guard",
+	// auramancer
+	"pegasus",
+	"knight",
+	// figure of destiny
+	// freewind equenaut
+	// gustcloak sentinel
+	"sniper",
+	// nobilis of war
+	// somberwald vigilante
+	"ringmaster","ringmaster",
+	// sun titan
+	"dwarf",
+	"robot",
+	"trap","trap",
+	// magma jet
+	// miraculous recovery
+	// moment of heroism
+	// pay no heed
+	// pyrokinesis
+	// righteousness
+	"bomb",
+	// stand firm
+	// battle mastery
+	// bonds of faith
+	"mutagen",
+	// griffin guide
+	// ordeal of purphoros?
+	// undying rage
+	]
 //  "oppdeck": [ "pope", "pope", "pope", "pope", "pope", "pope", "lion", "angel", "lion", "cardinal" ]
 }

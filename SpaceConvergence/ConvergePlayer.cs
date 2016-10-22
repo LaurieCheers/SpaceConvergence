@@ -17,6 +17,8 @@ namespace SpaceConvergence
         public ConvergeZone hand;
         public ConvergeZone laboratory;
         public ConvergeZone discardPile;
+        Dictionary<ConvergeZoneId, ConvergeZone> zones;
+        public ConvergeZone GetZone(ConvergeZoneId zoneId) { return zones[zoneId]; }
         public int life;
         public int numLandsPlayed;
         public int numLandsPlayable = 1;
@@ -35,6 +37,17 @@ namespace SpaceConvergence
             this.homeBase = new ConvergeObject(new ConvergeCardSpec(template.getJSON("homebase"), Content), home);
             this.discardPile = new ConvergeZone(template.getJSON("discardPile"), this, ConvergeZoneId.DiscardPile);
             this.laboratory = new ConvergeZone(template.getJSON("laboratory"), this, ConvergeZoneId.Laboratory);
+
+            zones = new Dictionary<ConvergeZoneId, ConvergeZone>()
+            {
+                {ConvergeZoneId.Home, home},
+                {ConvergeZoneId.Attack, attack},
+                {ConvergeZoneId.Defense, defense},
+                {ConvergeZoneId.Hand, hand},
+                {ConvergeZoneId.DiscardPile, discardPile},
+                {ConvergeZoneId.Laboratory, laboratory},
+            };
+
             this.life = template.getInt("startingLife");
             this.faceLeft = template.getBool("faceLeft", false);
         }

@@ -69,6 +69,7 @@ namespace SpaceConvergence
         None = 0,
         Tap = 1,
         Sacrifice = 2,
+        Discard = 4,
     };
 
     public enum ConvergeDuration
@@ -138,6 +139,8 @@ namespace SpaceConvergence
 
         public readonly ConvergeSelector actionTarget;
         public readonly ConvergeCommand actionEffect;
+
+        public static readonly Dictionary<string, ConvergeCardSpec> allCards = new Dictionary<string, ConvergeCardSpec>();
 
         public ConvergeCardSpec(JSONTable template, ContentManager Content)
         {
@@ -572,6 +575,12 @@ namespace SpaceConvergence
             if (tapped && altCost.HasFlag(ConvergeAltCost.Tap))
                 return false;
 
+            if (altCost.HasFlag(ConvergeAltCost.Sacrifice | ConvergeAltCost.Tap) && (zone.zoneId & ConvergeZoneId.Play) == 0)
+                return false;
+
+            if (altCost.HasFlag(ConvergeAltCost.Discard) && zone.zoneId != ConvergeZoneId.Hand)
+                return false;
+
             return true;
         }
 
@@ -583,7 +592,7 @@ namespace SpaceConvergence
             if (altCost.HasFlag(ConvergeAltCost.Tap))
                 tapped = true;
 
-            if (altCost.HasFlag(ConvergeAltCost.Sacrifice))
+            if ((altCost & (ConvergeAltCost.Sacrifice | ConvergeAltCost.Discard)) != 0)
                 MoveZone(owner.discardPile);
 
             return true;
@@ -606,7 +615,7 @@ namespace SpaceConvergence
 
         public void BeginMyTurn()
         {
-            if(zone.zoneId == ConvergeZoneId.Attack && !tapped)
+            if(zone.zoneId == ConvergeZoneId.Attack && !tapped && !destroyed && wounds == 0)
                 DealDamage(controller.opponent.homeBase, effectivePower, true);
             
             if (keywords.HasFlag(ConvergeKeyword.Vigilance))
@@ -650,12 +659,10 @@ namespace SpaceConvergence
 
             if(controller != oldController)
             {
-                if (zone.zoneId == ConvergeZoneId.Home)
-                    MoveZone(controller.home);
-                else if (zone.zoneId == ConvergeZoneId.Attack || zone.zoneId == ConvergeZoneId.Defense)
+                if (zone.zoneId == ConvergeZoneId.Attack)
                     MoveZone(controller.defense);
                 else
-                    Debug.Assert(false);
+                    MoveZone(controller.GetZone(zone.zoneId));
             }
         }
 

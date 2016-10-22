@@ -111,24 +111,23 @@ namespace SpaceConvergence
             UIButtonStyle defaultStyle = UIButton.GetDefaultStyle(Content);
             ui.Add(new UIButton("End Turn", new Rectangle(600, 400, 80, 40), defaultStyle, EndTurn_onPress));
 
-            allCards = new Dictionary<string, ConvergeCardSpec>();
             JSONTable allCardsTemplate = data.getJSON("cards");
             foreach (string cardName in allCardsTemplate.Keys)
             {
-                allCards.Add(cardName, new ConvergeCardSpec(allCardsTemplate.getJSON(cardName), Content));
+                ConvergeCardSpec.allCards.Add(cardName, new ConvergeCardSpec(allCardsTemplate.getJSON(cardName), Content));
             }
 
             foreach(string cardName in data.getArray("mydeck").asStrings())
             {
                 //ConvergeObject handCard =
-                new ConvergeObject(allCards[cardName], self.laboratory);
+                new ConvergeObject(ConvergeCardSpec.allCards[cardName], self.laboratory);
                 //ui.Add(new ConvergeUIObject(handCard));
             }
 
             foreach (string cardName in data.getArray("oppdeck").asStrings())
             {
                 //ConvergeObject handCard =
-                new ConvergeObject(allCards[cardName], opponent.laboratory);
+                new ConvergeObject(ConvergeCardSpec.allCards[cardName], opponent.laboratory);
                 //ui.Add(new ConvergeUIObject(handCard));
             }
 

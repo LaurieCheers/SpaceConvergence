@@ -35,10 +35,16 @@ namespace SpaceConvergence
                     return new ConvergeCommand_Damage(template);
                 case "heal":
                     return new ConvergeCommand_Heal(template);
-                case "takecontrol":
+                case "gainLife":
+                    return new ConvergeCommand_GainLife(template);
+                case "takeControl":
                     return new ConvergeCommand_TakeControl(template);
+                case "tap":
+                    return new ConvergeCommand_Tap(template);
                 case "untap":
                     return new ConvergeCommand_Untap(template);
+                case "retreat":
+                    return new ConvergeCommand_Retreat(template);
                 case "upgrade":
                     return new ConvergeCommand_Upgrade(template);
                 case "destroy":
@@ -47,6 +53,8 @@ namespace SpaceConvergence
                     return new ConvergeCommand_ProduceMana(template);
                 case "grantActivated":
                     return new ConvergeCommand_GrantActivated(template, Content);
+                case "spawn":
+                    return new ConvergeCommand_Spawn(template, Content);
                 case "sequence":
                     return new ConvergeCommand_Sequence(template, Content);
                 default:
@@ -105,6 +113,28 @@ namespace SpaceConvergence
         }
     }
 
+    public class ConvergeCommand_GainLife : ConvergeCommand
+    {
+        ConvergeSelector subjects;
+        ConvergeCalculation amount;
+
+        public ConvergeCommand_GainLife(JSONArray template)
+        {
+            subjects = ConvergeSelector.New(template.getProperty(1));
+            amount = ConvergeCalculation.New(template.getProperty(2));
+        }
+
+        public override void Run(ConvergeEffectContext context)
+        {
+            int amountValue = amount.GetValue(context);
+
+            foreach (ConvergeObject subject in subjects.GetList(context))
+            {
+                subject.controller.GainLife(amountValue);
+            }
+        }
+    }
+
     public class ConvergeCommand_TakeControl : ConvergeCommand
     {
         ConvergeSelector newControllerSelector;
@@ -150,6 +180,42 @@ namespace SpaceConvergence
             foreach (ConvergeObject patient in patients.GetList(context))
             {
                 patient.tapped = false;
+            }
+        }
+    }
+
+    public class ConvergeCommand_Tap : ConvergeCommand
+    {
+        ConvergeSelector subjects;
+
+        public ConvergeCommand_Tap(JSONArray template)
+        {
+            subjects = ConvergeSelector.New(template.getProperty(1));
+        }
+
+        public override void Run(ConvergeEffectContext context)
+        {
+            foreach (ConvergeObject subject in subjects.GetList(context))
+            {
+                subject.tapped = true;
+            }
+        }
+    }
+
+    public class ConvergeCommand_Retreat : ConvergeCommand
+    {
+        ConvergeSelector subjects;
+
+        public ConvergeCommand_Retreat(JSONArray template)
+        {
+            subjects = ConvergeSelector.New(template.getProperty(1));
+        }
+
+        public override void Run(ConvergeEffectContext context)
+        {
+            foreach (ConvergeObject subject in subjects.GetList(context))
+            {
+                subject.WithdrawAttack();
             }
         }
     }
@@ -245,6 +311,28 @@ namespace SpaceConvergence
         }
     }
 
+    public class ConvergeCommand_Spawn : ConvergeCommand
+    {
+        ConvergeSelector players;
+        ConvergeCardSpec cardSpec;
+        ConvergeZoneId zoneId;
+
+        public ConvergeCommand_Spawn(JSONArray template, ContentManager Content)
+        {
+            players = ConvergeSelector.New(template.getProperty(1));
+            cardSpec = ConvergeCardSpec.allCards[template.getString(2)];
+            zoneId = (ConvergeZoneId)Enum.Parse(typeof(ConvergeZoneId), template.getString(3, "Defense"));
+        }
+
+        public override void Run(ConvergeEffectContext context)
+        {
+            foreach (ConvergeObject player in players.GetList(context))
+            {
+                new ConvergeObject(cardSpec, player.controller.GetZone(zoneId));
+            }
+        }
+    }
+
     public class ConvergeCommand_Sequence : ConvergeCommand
     {
         List<ConvergeCommand> commands;
@@ -324,6 +412,8 @@ namespace SpaceConvergence
                         return new ConvergeSelector_Control(arrayTemplate);
                     case "battlefield":
                         return new ConvergeSelector_Battlefield(arrayTemplate);
+                    case "zone":
+                        return new ConvergeSelector_Zone(arrayTemplate);
                     case "equal":
                     case "notEqual":
                     case "less":
@@ -565,6 +655,48 @@ namespace SpaceConvergence
         }
     }
 
+    public class ConvergeSelector_Zone : ConvergeSelector
+    {
+        ConvergeSelector whose;
+        ConvergeZoneId zoneId;
+        List<ConvergeSelector> filters;
+
+        public ConvergeSelector_Zone(JSONArray template)
+        {
+            whose = ConvergeSelector.New(template.getProperty(1));
+            zoneId = (ConvergeZoneId)Enum.Parse(typeof(ConvergeZoneId), template.getString(2));
+            filters = new List<ConvergeSelector>();
+            for (int Idx = 3; Idx < template.Length; ++Idx)
+            {
+                filters.Add(ConvergeSelector.New(template.getProperty(Idx)));
+            }
+        }
+        public override List<ConvergeObject> GetList(ConvergeEffectContext context)
+        {
+            List<ConvergeObject> players = whose.GetList(context);
+            List<ConvergeObject> result = new List<ConvergeObject>();
+            foreach(ConvergeObject player in players)
+            {
+                result.AddRange(player.controller.GetZone(zoneId).contents);
+            }
+
+            Filter(result, context);
+            return result;
+        }
+        public override bool Test(ConvergeObject subject, ConvergeEffectContext context)
+        {
+            // TO DO: at some point we're going to be sad this isn't checking the zone correctly
+            if (subject.zone.zoneId != zoneId)// || !whose.Test(subject.zone.owner.homeBase, context))
+                return false;
+
+            foreach (ConvergeSelector select in filters)
+                if (!select.Test(subject, context))
+                    return false;
+
+            return true;
+        }
+    }
+
 
 
     public abstract class ConvergeCalculation
@@ -594,6 +726,8 @@ namespace SpaceConvergence
                 {
                     case "powerOf":
                         return new ConvergeCalculation_Power(array);
+                    case "toughnessOf":
+                        return new ConvergeCalculation_Toughness(array);
                     default:
                         throw new ArgumentException();
                 }
@@ -635,6 +769,26 @@ namespace SpaceConvergence
             foreach(ConvergeObject obj in select.GetList(context))
             {
                 total += obj.power;
+            }
+            return total;
+        }
+    }
+
+    public class ConvergeCalculation_Toughness : ConvergeCalculation
+    {
+        ConvergeSelector select;
+
+        public ConvergeCalculation_Toughness(JSONArray template)
+        {
+            select = ConvergeSelector.New(template.getProperty(1));
+        }
+
+        public override int GetValue(ConvergeEffectContext context)
+        {
+            int total = 0;
+            foreach (ConvergeObject obj in select.GetList(context))
+            {
+                total += obj.toughness;
             }
             return total;
         }
