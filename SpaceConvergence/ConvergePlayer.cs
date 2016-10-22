@@ -21,7 +21,7 @@ namespace SpaceConvergence
         public int numLandsPlayed;
         public int numLandsPlayable = 1;
         public ConvergeManaAmount resources = new ConvergeManaAmount();
-        public ConvergeManaAmount resourcesSpent = new ConvergeManaAmount();
+        public bool[] showResources = new bool[6];
         public ConvergePlayer opponent;
         public bool faceLeft;
         public bool isActivePlayer { get { return this == Game1.activePlayer; } }
@@ -39,33 +39,14 @@ namespace SpaceConvergence
             this.faceLeft = template.getBool("faceLeft", false);
         }
 
-        public void UpdateState()
-        {
-            resources.Clear();
-            UpdateZone(home);
-            UpdateZone(defense);
-            UpdateZone(attack);
-        }
-
-        void UpdateZone(ConvergeZone zone)
-        {
-            foreach (ConvergeObject obj in zone.contents)
-            {
-                if (obj.produces != null)
-                {
-                    resources.Add(obj.produces);
-                }
-            }
-        }
-
         public bool CanPayCost(ConvergeManaAmount cost)
         {
-            return resourcesSpent.CanSpend(resources, cost);
+            return resources.CanSpend(cost);
         }
 
         public bool TryPayCost(ConvergeManaAmount cost)
         {
-            return resourcesSpent.TrySpend(resources, cost);
+            return resources.TrySpend(cost);
         }
 
         public void TakeDamage(int amount)
@@ -98,7 +79,13 @@ namespace SpaceConvergence
 
         public void BeginMyTurn()
         {
-            resourcesSpent.Clear();
+            resources.Clear();
+            foreach(ConvergeObject obj in home.contents)
+            {
+                if(obj.produces != null)
+                    resources.Add(obj.produces);
+            }
+
             numLandsPlayed = 0;
             attack.BeginMyTurn();
             defense.BeginMyTurn();

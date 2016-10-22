@@ -70,8 +70,45 @@
 		"target":["battlefield", ["type","Unit"], ["greaterOrEqual",["powerOf", "subject"], 4]],
 		"effect":["destroy", "target"]
 	}
+	
+	"satyr":{"art":"satyr", "cardType":["Unit"], "cost":"CCG", "power":2, "toughness":1, "activated":[
+		{"icon":"red_munitions", "frameColor":"FF8888", "manaCost":"CR", "altCost":["Sacrifice"], "effect":["produceMana", "3RRR"]}
+	]},
+
+	"mutagen":{"art":"mutagen", "cardType":["Augment"], "cost":"CW",
+		"target":["battlefield", ["type","Unit"]],
+		"effect":["grantActivated", "target", "Permanent", {
+			"icon":"icon_upgrade",
+			"frameColor":"FFAA88",
+			"manaCost":"CCW",
+			"text":"Gain +1/+1 permanently.",
+			"effect":["upgrade", "source", 1, 1]
+		}]
+	},
+	
+	"king":{"art":"king", "cardType":["Unit"], "cost":"3RW", "power":3, "toughness":2, "keywords":["FirstStrike","Vigilance"], "triggered":[{
+		"trigger":"PlayCard",
+		"triggerPlayer":"you",
+		"triggerTarget":"source",
+		"effect":["upgrade",["battlefield",["control","you"], ["type","Unit"]], 1, 1, ["Trample"], "YourNextTurn"]
+	}]},
+	
+	"mammoth":{"art":"mammoth", "cardType":["Unit"], "cost":"5", "power":6, "toughness":6, "keywords":["Trample"], "triggered":[{
+		"trigger":"DealDamage",
+		"triggerSubject":"source",
+		"triggerTarget":"opponent",
+		"condition":["greaterOrEqual", "triggerAmount", 6],
+		"effect":["grantActivated","source","YourNextTurn",{
+			"icon":"icon_damage",
+			"frameColor":"444444",
+			"text":"Destroy a support.",
+			"uses":1,
+			"target":["battlefield", ["type","Support"]],
+			"effect":["destroy", "target"]
+		}]
+	}]},
   },
-  "mydeck": [ "farmer", "farmer", "farmer", "farmer", "farmer", "farmer", "farmer", "bear", "beast", "basilisk", "gnome" ],
-  "oppdeck": [ "armorer", "armorer", "armorer", "armorer", "pope", "pope", "lion", "bomb", "angel", "fox", "cardinal", "baal" ]
+  "mydeck": [ "farmer", "farmer", "farmer", "farmer", "farmer", "farmer", "armorer", "bear", "beast", "basilisk", "gnome", "satyr", "mammoth" ],
+  "oppdeck": [ "armorer", "armorer", "armorer", "armorer", "pope", "pope", "king", "lion", "bomb", "angel", "fox", "cardinal", "baal", "mutagen" ]
 //  "oppdeck": [ "pope", "pope", "pope", "pope", "pope", "pope", "lion", "angel", "lion", "cardinal" ]
 }

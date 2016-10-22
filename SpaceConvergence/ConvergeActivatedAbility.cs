@@ -26,7 +26,7 @@ namespace SpaceConvergence
         {
             frame = Content.Load<Texture2D>(template.getString("frame", "abilityFrame"));
             icon = Content.Load<Texture2D>(template.getString("icon"));
-            effect = ConvergeCommand.New(template.getArray("effect"));
+            effect = ConvergeCommand.New(template.getArray("effect"), Content);
             frameColor = template.getString("frameColor", "FFFFFF").toColor();
 
             if (template.hasKey("target"))
@@ -128,7 +128,7 @@ namespace SpaceConvergence
             if (hasTarget)
                 return;
 
-            if (you.TryPayCost(manacost))
+            if (you.TryPayCost(manacost) && source.TryPayAltCost(altCost))
             {
                 timesUsed++;
                 ConvergeEffectContext context = new ConvergeEffectContext(source, you);

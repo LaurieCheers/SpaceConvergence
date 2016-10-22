@@ -252,6 +252,14 @@ namespace LRCEngine
             return dictionary[name];
         }
 
+        public System.Object getProperty(string name, System.Object defaultValue)
+        {
+            if (dictionary.ContainsKey(name))
+                return dictionary[name];
+            else
+                return defaultValue;
+        }
+
         public int getInt(string name, int defaultValue)
         {
             if (dictionary.ContainsKey(name))

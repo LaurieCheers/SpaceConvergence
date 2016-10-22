@@ -71,17 +71,17 @@ namespace SpaceConvergence
                 amounts[Idx] += other.amounts[Idx];
         }
 
-        public void DrawResources(SpriteBatch spriteBatch, ConvergeManaAmount spent, Vector2 drawPos)
+        public void DrawResources(SpriteBatch spriteBatch, bool[] showResources, Vector2 drawPos)
         {
             for (int Idx = 0; Idx < amounts.Length; ++Idx)
             {
-                int maxAmount = amounts[Idx];
-                int currentAmount = maxAmount - spent.amounts[Idx];
-                if (maxAmount > 0)
+                int currentAmount = amounts[Idx];
+                if (currentAmount > 0 || showResources[Idx])
                 {
                     spriteBatch.Draw(Game1.resourceTextures[Idx], drawPos, Color.White);
                     spriteBatch.DrawString(Game1.font, "" + currentAmount, drawPos + new Vector2(20, 0), currentAmount > 0 ? Color.Black : Color.DarkGreen);
                     drawPos.Y += 20;
+                    showResources[Idx] = true;
                 }
             }
         }
@@ -98,30 +98,30 @@ namespace SpaceConvergence
             }
         }
 
-        public bool TrySpend(ConvergeManaAmount resources, ConvergeManaAmount cost)
+        public bool TrySpend(ConvergeManaAmount cost)
         {
             if (cost == null)
                 return true;
 
-            if (!CanSpend(resources, cost))
+            if (!CanSpend(cost))
                 return false;
 
             for (int Idx = 0; Idx < amounts.Length; ++Idx)
             {
-                amounts[Idx] += cost.amounts[Idx];
+                amounts[Idx] -= cost.amounts[Idx];
             }
 
             return true;
         }
 
-        public bool CanSpend(ConvergeManaAmount resources, ConvergeManaAmount cost)
+        public bool CanSpend(ConvergeManaAmount cost)
         {
             if (cost == null)
                 return true;
 
             for (int Idx = 0; Idx < amounts.Length; ++Idx)
             {
-                if (resources.amounts[Idx] - amounts[Idx] < cost.amounts[Idx])
+                if (amounts[Idx] < cost.amounts[Idx])
                     return false;
             }
 

@@ -27,6 +27,12 @@ namespace SpaceConvergence
             represented.ui = this;
             this.gfxFrame = new Rectangle(represented.nominalPosition.ToPoint(), new Point(50, 60));
 
+            UpdateAbilityUIs();
+        }
+
+        void UpdateAbilityUIs()
+        {
+            abilityUIs.Clear();
             Vector2 offset = new Vector2(this.gfxFrame.Width / 2, 12);
             foreach(ConvergeActivatedAbility ability in represented.activatedAbilities)
             {
@@ -37,6 +43,9 @@ namespace SpaceConvergence
 
         public override void Update(InputState inputState, Vector2 origin)
         {
+            if (abilityUIs.Count != represented.activatedAbilities.Count)
+                UpdateAbilityUIs();
+
             isBadDrag = false;
             isVisible = represented.zone.zoneId == ConvergeZoneId.Hand ? (represented.zone.owner.isActivePlayer) : true;
 
@@ -195,20 +204,20 @@ namespace SpaceConvergence
             }
             else if (represented.cardType.HasFlag(ConvergeCardType.Unit))
             {
-                if (represented.damage >= represented.toughness)
+                if (represented.wounds > 0)
                 {
                     spriteBatch.Draw(Game1.woundbg, new Rectangle(gfxFrame.Center.X - 11, gfxFrame.Center.Y, 22, 16), Color.White);
-                    spriteBatch.DrawString(Game1.font, "-" + (represented.toughness-1-represented.damage), gfxFrame.Center.ToVector2(), TextAlignment.CENTER, Color.Red);
+                    spriteBatch.DrawString(Game1.font, "-" + represented.wounds, gfxFrame.Center.ToVector2(), TextAlignment.CENTER, Color.Red);
                 }
                 else
                 {
                     if (represented.power > 0)
                     {
                         spriteBatch.Draw(Game1.powerbg, new Rectangle(gfxFrame.Left + 8, gfxFrame.Bottom, 16, 16), Color.White);
-                        spriteBatch.DrawString(Game1.font, "" + represented.power, new Vector2(gfxFrame.Left + 16, gfxFrame.Bottom), TextAlignment.CENTER, Color.Yellow);
+                        spriteBatch.DrawString(Game1.font, "" + represented.effectivePower, new Vector2(gfxFrame.Left + 16, gfxFrame.Bottom), TextAlignment.CENTER, represented.powerUsed > 0? Color.Red : Color.Yellow);
                     }
                     spriteBatch.Draw(Game1.shieldbg, new Rectangle(gfxFrame.Right - 24, gfxFrame.Bottom, 16, 16), Color.White);
-                    spriteBatch.DrawString(Game1.font, "" + (represented.toughness-represented.damage), new Vector2(gfxFrame.Right - 16, gfxFrame.Bottom), TextAlignment.CENTER, represented.damage > 0 ? Color.Red : Color.White);
+                    spriteBatch.DrawString(Game1.font, "" + represented.effectiveToughness, new Vector2(gfxFrame.Right - 16, gfxFrame.Bottom), TextAlignment.CENTER, represented.damage > 0 ? Color.Red : Color.White);
                 }
             }
 
@@ -221,7 +230,7 @@ namespace SpaceConvergence
                     resourcePos = new Vector2(gfxFrame.Left, gfxFrame.Bottom);
                 else
                     resourcePos = new Vector2(gfxFrame.Center.X, gfxFrame.Bottom);
-                controller.resources.DrawResources(spriteBatch, controller.resourcesSpent, resourcePos);
+                controller.resources.DrawResources(spriteBatch, controller.showResources, resourcePos);
             }
 
             bool drawHighlight = isMouseOver;
@@ -278,7 +287,6 @@ namespace SpaceConvergence
         bool isMouseOver;
         bool isMousePressing;
         bool isDragging;
-        bool isVisible;
 
         public ConvergeUIAbility(ConvergeActivatedAbility ability, Vector2 offset, ConvergeUIObject parent)
         {

@@ -43,6 +43,7 @@
     <Compile Include="ConvergeManaAmount.cs" />
     <Compile Include="ConvergeObject.cs" />
     <Compile Include="ConvergePlayer.cs" />
+    <Compile Include="ConvergeTriggeredAbility.cs" />
     <Compile Include="ConvergeUIObject.cs" />
     <Compile Include="ConvergeZone.cs" />
     <Compile Include="Game1.cs" />
@@ -156,10 +157,19 @@
     <Content Include="Content\icon_upgrade.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Content\king.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Content\lion.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Content\mammoth.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Content\mouseOverGlow.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\mutagen.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\pope.png">
@@ -169,6 +179,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\red_munitions.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\satyr.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\shieldbg.png">

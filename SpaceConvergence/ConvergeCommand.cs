@@ -1,4 +1,5 @@
 ﻿using LRCEngine;
+using Microsoft.Xna.Framework.Content;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,6 +14,7 @@ namespace SpaceConvergence
         public ConvergeObject target;
         public ConvergeObject subject;
         public ConvergePlayer you;
+        public TriggerData trigger;
 
         public ConvergeEffectContext(ConvergeObject source, ConvergePlayer you)
         {
@@ -25,7 +27,7 @@ namespace SpaceConvergence
     {
         public abstract void Run(ConvergeEffectContext context);
 
-        public static ConvergeCommand New(JSONArray template)
+        public static ConvergeCommand New(JSONArray template, ContentManager Content)
         {
             switch(template.getString(0))
             {
@@ -41,8 +43,12 @@ namespace SpaceConvergence
                     return new ConvergeCommand_Upgrade(template);
                 case "destroy":
                     return new ConvergeCommand_Destroy(template);
+                case "produceMana":
+                    return new ConvergeCommand_ProduceMana(template);
+                case "grantActivated":
+                    return new ConvergeCommand_GrantActivated(template, Content);
                 case "sequence":
-                    return new ConvergeCommand_Sequence(template);
+                    return new ConvergeCommand_Sequence(template, Content);
                 default:
                     throw new ArgumentException();
             }
@@ -148,6 +154,21 @@ namespace SpaceConvergence
         }
     }
 
+    public class ConvergeCommand_ProduceMana : ConvergeCommand
+    {
+        ConvergeManaAmount produced;
+
+        public ConvergeCommand_ProduceMana(JSONArray template)
+        {
+            produced = new ConvergeManaAmount(template.getString(1));
+        }
+
+        public override void Run(ConvergeEffectContext context)
+        {
+            context.you.resources.Add(produced);
+        }
+    }
+
     public class ConvergeCommand_Upgrade : ConvergeCommand
     {
         ConvergeSelector patients;
@@ -202,16 +223,38 @@ namespace SpaceConvergence
         }
     }
 
+    public class ConvergeCommand_GrantActivated : ConvergeCommand
+    {
+        ConvergeSelector subjects;
+        ConvergeDuration duration;
+        ConvergeActivatedAbilitySpec abilitySpec;
+
+        public ConvergeCommand_GrantActivated(JSONArray template, ContentManager Content)
+        {
+            subjects = ConvergeSelector.New(template.getProperty(1));
+            duration = (ConvergeDuration)Enum.Parse(typeof(ConvergeDuration), template.getString(2));
+            abilitySpec = new ConvergeActivatedAbilitySpec(template.getJSON(3), Content);
+        }
+
+        public override void Run(ConvergeEffectContext context)
+        {
+            foreach (ConvergeObject subject in subjects.GetList(context))
+            {
+                subject.AddEffect(new ConvergeEffect_GainActivated(abilitySpec, subject, context.source, duration));
+            }
+        }
+    }
+
     public class ConvergeCommand_Sequence : ConvergeCommand
     {
         List<ConvergeCommand> commands;
 
-        public ConvergeCommand_Sequence(JSONArray template)
+        public ConvergeCommand_Sequence(JSONArray template, ContentManager Content)
         {
             commands = new List<ConvergeCommand>();
             for (int Idx = 1; Idx < template.Length; ++Idx)
             {
-                commands.Add( ConvergeCommand.New(template.getArray(Idx)) );
+                commands.Add( ConvergeCommand.New(template.getArray(Idx), Content) );
             }
         }
 
@@ -247,6 +290,9 @@ namespace SpaceConvergence
 
         public static ConvergeSelector New(object template)
         {
+            if (template == null)
+                return ConvergeSelector_DontCare.instance;
+
             if (template is string)
             {
                 switch ((string)template)
@@ -294,6 +340,15 @@ namespace SpaceConvergence
                 throw new ArgumentException();
             }
         }
+    }
+
+    public class ConvergeSelector_DontCare: ConvergeSelector
+    {
+        public override bool Test(ConvergeObject subject, ConvergeEffectContext context)
+        {
+            return true;
+        }
+        public static ConvergeSelector_DontCare instance = new ConvergeSelector_DontCare();
     }
 
     public class ConvergeSelector_Source : ConvergeSelector
@@ -518,15 +573,21 @@ namespace SpaceConvergence
 
         public static ConvergeCalculation New(object template)
         {
-            if (template is int)
-            {
-                return new ConvergeCalculation_Constant((int)template);
-            }
-            else if (template is double)
+            if (template is double)
             {
                 return new ConvergeCalculation_Constant((int)(double)template);
             }
-            else if(template is object[])
+            else if (template is string)
+            {
+                switch((string)template)
+                {
+                    case "triggerAmount":
+                        return new ConvergeCalculation_TriggerAmount();
+                    default:
+                        throw new ArgumentException();
+                }
+            }
+            else if (template is object[])
             {
                 JSONArray array = new JSONArray((object[])template);
                 switch(array.getString(0))
@@ -576,6 +637,14 @@ namespace SpaceConvergence
                 total += obj.power;
             }
             return total;
+        }
+    }
+
+    public class ConvergeCalculation_TriggerAmount : ConvergeCalculation
+    {
+        public override int GetValue(ConvergeEffectContext context)
+        {
+            return context.trigger.amount;
         }
     }
 }

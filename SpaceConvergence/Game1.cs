@@ -200,12 +200,6 @@ namespace SpaceConvergence
                 }
             }
             zoneChanges.Clear();
-
-            if(didAnything)
-            {
-                self.UpdateState();
-                opponent.UpdateState();
-            }
         }
 
         /// <summary>
