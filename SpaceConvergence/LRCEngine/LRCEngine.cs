@@ -164,6 +164,50 @@ namespace LRCEngine
             }
         }
 
+        public static string InsertLineBreaks(this string rawText, SpriteFont font, int lineWidth)
+        {
+            float spaceWidth = font.MeasureString(" ").X;
+            float x = 0;
+            int wordStartIdx = 0;
+            string result = "";
+            string lastSplit = "";
+            float lastSplitWidth = 0;
+            for(int Idx = 0; Idx <= rawText.Length; ++Idx)
+            {
+                if(Idx == rawText.Length || rawText[Idx] == ' ')
+                {
+                    string word = rawText.Substring(wordStartIdx, Idx - wordStartIdx);
+                    float wordWidth = font.MeasureString(word).X;
+                    if (x + lastSplitWidth + wordWidth > lineWidth)
+                    {
+                        result += "\n";
+                        x = 0;
+                    }
+                    else
+                    {
+                        result += lastSplit;
+                        x += lastSplitWidth;
+
+                        if (Idx < rawText.Length)
+                        {
+                            lastSplit = "" + rawText[Idx];
+                            lastSplitWidth = font.MeasureString(lastSplit).X;
+                        }
+                    }
+                    result += word;
+                    x += wordWidth;
+                    wordStartIdx = Idx + 1;
+                }
+                else if (rawText[Idx] == '\n')
+                {
+                    result += "\n";
+                    x = 0;
+                }
+            }
+
+            return result;
+        }
+
         public static void DrawBeam(this SpriteBatch spriteBatch, Texture2D texture, Vector2 start, Vector2 end, int thickness, Color color)
         {
             Vector2 offset = end - start;

@@ -1,5 +1,6 @@
 ﻿using LRCEngine;
 using Microsoft.Xna.Framework.Content;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -48,7 +49,7 @@ namespace SpaceConvergence
                 case "retreat":
                     return new ConvergeCommand_Retreat(template);
                 case "upgrade":
-                    return new ConvergeCommand_Upgrade(template);
+                    return new ConvergeCommand_Upgrade(template, Content);
                 case "destroy":
                     return new ConvergeCommand_Destroy(template);
                 case "produceMana":
@@ -268,9 +269,10 @@ namespace SpaceConvergence
         ConvergeCalculation powerAmount;
         ConvergeCalculation toughnessAmount;
         ConvergeKeyword keywords;
+        Texture2D new_art;
         ConvergeDuration duration;
 
-        public ConvergeCommand_Upgrade(JSONArray template)
+        public ConvergeCommand_Upgrade(JSONArray template, ContentManager Content)
         {
             patients = ConvergeSelector.New(template.getProperty(1));
             powerAmount = ConvergeCalculation.New(template.getProperty(2));
@@ -280,10 +282,13 @@ namespace SpaceConvergence
                 keywords = template.getArray(4).ToKeywords();
             }
 
-            if (template.Length == 6)
+            if (template.Length >= 6)
                 duration = (ConvergeDuration)Enum.Parse(typeof(ConvergeDuration), template.getString(5));
             else
                 duration = ConvergeDuration.Permanent;
+
+            if (template.Length >= 7)
+                new_art = Content.Load<Texture2D>(template.getString(6));
         }
 
         public override void Run(ConvergeEffectContext context)
@@ -293,7 +298,7 @@ namespace SpaceConvergence
 
             foreach (ConvergeObject patient in patients.GetList(context))
             {
-                patient.AddEffect(new ConvergeEffect_Upgrade(power, toughness, keywords, context.source, duration));
+                patient.AddEffect(new ConvergeEffect_Upgrade(power, toughness, keywords, context.source, new_art, duration));
             }
         }
     }

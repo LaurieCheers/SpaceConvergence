@@ -44,6 +44,12 @@ namespace SpaceConvergence
 
         public static RichImage mouseOverGlow;
         public static RichImage cardFrame;
+        public static RichImage whiteFrame;
+        public static RichImage blueFrame;
+        public static RichImage blackFrame;
+        public static RichImage redFrame;
+        public static RichImage greenFrame;
+        public static RichImage goldFrame;
 
         UIButton endTurnButton;
         bool endTurnPressed;
@@ -84,6 +90,12 @@ namespace SpaceConvergence
 
             mouseOverGlow = new RichImage(data.getJSON("mouseOverGlow"), Content);
             cardFrame = new RichImage(data.getJSON("cardFrame"), Content);
+            whiteFrame = new RichImage(data.getJSON("whiteFrame"), Content);
+            blueFrame = new RichImage(data.getJSON("blueFrame"), Content);
+            blackFrame = new RichImage(data.getJSON("blackFrame"), Content);
+            redFrame = new RichImage(data.getJSON("redFrame"), Content);
+            greenFrame = new RichImage(data.getJSON("greenFrame"), Content);
+            goldFrame = new RichImage(data.getJSON("goldFrame"), Content);
 
             font = Content.Load<SpriteFont>("Arial");
             shieldbg = Content.Load<Texture2D>("shieldbg");

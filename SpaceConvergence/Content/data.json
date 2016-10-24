@@ -1,6 +1,12 @@
 {
   "mouseOverGlow":{"texture":"mouseOverGlow", "draw":"stretched9grid", "padding":8},
   "cardFrame":{"texture":"button3d", "draw":"stretched9grid"},
+  "whiteFrame":{"texture":"button3d", "draw":"stretched9grid", "color":"FFFFFF"},
+  "blueFrame":{"texture":"button3d", "draw":"stretched9grid", "color":"44AAFF"},
+  "blackFrame":{"texture":"button3d", "draw":"stretched9grid", "color":"444444"},
+  "redFrame":{"texture":"button3d", "draw":"stretched9grid", "color":"FF8888"},
+  "greenFrame":{"texture":"button3d", "draw":"stretched9grid", "color":"44FF88"},
+  "goldFrame":{"texture":"button3d", "draw":"stretched9grid", "color":"FFFF00"},
   "self":{
     "homebase":{"art":"homebase", "cardType":["Home"]},
 	"hand":{"basePos":[125,375], "slotOffset":[50,0], "topLeft":[125,375], "bottomRight":[725,500]},
@@ -27,12 +33,12 @@
   },
   "cards":
   {
-	"farmer":{"art":"farmer", "cardType":["Support"], "produces":"1G"},
-	"armorer":{"art":"armorer", "cardType":["Support"], "produces":"1R"},
-	"pope":{"art":"pope", "cardType":["Support"], "produces":"1W"},
-	"frontiersman":{"art":"frontiersman", "cardType":["Support"], "produces":"1GR"},
+	"farmer":{"art":"farmer", "cardType":["Resource"], "produces":"1G"},
+	"armorer":{"art":"armorer", "cardType":["Resource"], "produces":"1R"},
+	"pope":{"art":"pope", "cardType":["Resource"], "produces":"1W"},
+	"frontiersman":{"art":"frontiersman", "cardType":["Resource"], "produces":"1GR"},
 	"bear":{"art":"bear", "cardType":["Unit"], "cost":"2G", "power":2, "toughness":2, "keywords":["Trample"],
-	"text":"Whenever opponent gains life, this gets upgraded that much.",
+	"text":"Whenever opponent gains life, put that many +1/+1 counters on this.",
 		"triggered":[{
 			"trigger":"GainLife",
 			"triggerPlayer":"opponent",
@@ -40,7 +46,7 @@
 		}]
 	},
 	"beast":{"art":"beast", "cardType":["Unit"], "cost":"5GG", "power":2, "toughness":3,
-	"text":"If you play this on a turn when opponent was dealt damage, this gets +3/+3 permanently.",
+	"text":"Bloodthirst 3",
 	"triggered":[{
 		"trigger":"EnterPlay",
 		"triggerSubject":"source",
@@ -48,7 +54,7 @@
 		"effect":["upgrade","source",3,3]
 	}]},
 	"yeti":{"art":"yeti", "cardType":["Unit"], "cost":"3R", "power":2, "toughness":2,
-	"text":"If you play this on a turn when opponent was dealt damage, this gets +1/+1 permanently.",
+	"text":"Bloodthirst 1",
 	"triggered":[{
 		"trigger":"EnterPlay",
 		"triggerSubject":"source",
@@ -56,7 +62,7 @@
 		"effect":["upgrade","source",1,1]
 	}]},
 	"wendigo":{"art":"wendigo", "cardType":["Unit"], "cost":"4RR", "power":3, "toughness":3,
-	"text":"If you play this on a turn when opponent was dealt damage, this gets +2/+2 permanently.",
+	"text":"Bloodthirst 2",
 	"triggered":[{
 		"trigger":"EnterPlay",
 		"triggerSubject":"source",
@@ -81,7 +87,7 @@
 		{"icon":"icon_takecontrol",
 		"frameColor":"FFFF88",
 		"uses":1,
-		"text":"ONE SHOT - Untap and gain control of an enemy unit until your next turn.",
+		"text":"ONE SHOT: Untap an enemy unit and gain control of it until your next turn.",
 		"target":["battlefield", ["control","opponent"], ["type","Unit"]],
 		"effect":["sequence",
 			["takeControl", "you", "target", "YourNextTurn"],
@@ -95,11 +101,41 @@
 		"frameColor":"88FF88",
 		"manaCost":"2G",
 		"altCost":["Tap"],
-		"text":"Get +1/+1 and fight an enemy.",
+		"text":"TAP: Get +1/+1 and fight a unit.",
 		"target":["battlefield", ["control","opponent"], ["type","Unit"]],
 		"effect":["sequence",
 			["upgrade", "source", 1,1],
 			["fight", "source", "target"]
+		]}
+	]},
+
+	"droid":{"art":"droid", "cardType":["Unit"], "cost":"1W", "power":1, "toughness":1,
+	"activated":[
+		{"icon":"icon_upgrade",
+		"frameColor":"888866",
+		"manaCost":"1",
+		"text":"Gain +1/+1 permanently.",
+		"uses":1,
+		"effect":["sequence",
+			["upgrade", "source", 1,1, [], "Permanent", "droid2"],
+			["grantActivated", "source", "Permanent", {
+				"icon":"icon_upgrade",
+				"frameColor":"999955",
+				"uses":1,
+				"manaCost":"3",
+				"text":"Gain +2/+2 permanently.",
+				"effect":["sequence",
+					["upgrade", "source", 2,2, [], "Permanent", "droid3"],
+					["grantActivated", "source", "Permanent", {
+						"icon":"icon_upgrade",
+						"frameColor":"AAAA44",
+						"manaCost":"6",
+						"uses":1,
+						"text":"Gain +4/+4, Flying and First Strike permanently.",
+						"effect":["upgrade", "source", 4,4, ["Flying", "FirstStrike"], "Permanent", "droid4"]
+					}]
+				]}
+			]
 		]}
 	]},
 	
@@ -109,7 +145,7 @@
 		"frameColor":"88FF88",
 		"manaCost":"CCC", 
 		"altCost":["Tap"],
-		"text":"TAP - A unit gets +1/+1 permanently.",
+		"text":"TAP: Give a unit +1/+1 permanently.",
 		"target":["battlefield", ["type","Unit"]],
 		"effect":["upgrade", "target", 1, 1]
 		}
@@ -131,7 +167,7 @@
 		{
 			"icon":"red_munitions",
 			"frameColor":"FF8888",
-			"text":"Produce 3RRR.",
+			"text":"SACRIFICE: Produce 3RRR.",
 			"manaCost":"CR",
 			"altCost":["Sacrifice"],
 			"effect":["produceMana", "3RRR"]
@@ -157,7 +193,7 @@
 			"icon":"icon_fight",
 			"frameColor":"88AA44",
 			"uses":1,
-			"text":"Fight a unit.",
+			"text":"ONE SHOT: Fight a unit.",
 			"target":["battlefield", ["control","opponent"], ["type","Unit"]],
 			"effect":["fight", "source", "target"]
 		}]
@@ -189,7 +225,7 @@
 			"icon":"icon_damage",
 			"frameColor":"FF0000",
 			"uses":4,
-			"text":"1 damage to a unit.",
+			"text":"FOUR SHOTS: 1 damage to a unit.",
 			"target":["battlefield", ["control","opponent"], ["type","Unit"]],
 			"effect":["damage", "source", 1, "target"]
 		}]
@@ -214,9 +250,9 @@
 		"effect":["grantActivated","source","YourNextTurn",{
 			"icon":"icon_damage",
 			"frameColor":"779977",
-			"text":"Destroy a support.",
+			"text":"ONE SHOT: Destroy a resource.",
 			"uses":1,
-			"target":["battlefield", ["type","Support"]],
+			"target":["battlefield", ["type","Resource"]],
 			"effect":["destroy", "target"]
 		}]
 	}]},
@@ -227,12 +263,13 @@
 		"manaCost":"2", 
 		"activeZones":["Hand"],
 		"altCost":["Discard"],
-		"text":"Discard this to draw a frontiersman.",
+		"text":"DISCARD: Draw a frontiersman.",
 		"effect":["spawn", "you", "frontiersman", "Hand"]
 		}
 	]},
 	
 	"ogre_guard":{"art":"ogre_guard", "cardType":["Unit"], "cost":"5W", "power":2, "toughness":5, "keywords":["Vigilance"]},
+	"giant":{"art":"giant", "cardType":["Unit"], "cost":"6WW", "power":6, "toughness":6, "keywords":["Vigilance"]},
 	"pegasus":{"art":"pegasus", "cardType":["Unit"], "cost":"2W", "power":1, "toughness":1, "keywords":["Flying"]},
 	"knight":{"art":"knight", "cardType":["Unit"], "cost":"5WW", "power":2, "toughness":4, "keywords":["Vigilance", "Lifelink"]},
 	"fencer":{"art":"fencer", "cardType":["Unit"], "cost":"2W", "power":1, "toughness":1, "keywords":["DoubleStrike"]},
@@ -241,7 +278,7 @@
 		{"icon":"icon_damage",
 		"frameColor":"FF0000",
 		"altCost":["Tap"],
-		"text":"Deal 3 damage.",
+		"text":"TAP: Deal 3 damage.",
 		"target":["battlefield", ["control","opponent"], ["type","Unit"]],
 		"effect":["damage", "source", 3, "target"]
 		}
@@ -251,7 +288,7 @@
 		"frameColor":"FF0000",
 		"manaCost":"1",
 		"altCost":["Tap"],
-		"text":"Deal 1 damage and make an attacker retreat.",
+		"text":"TAP: Deal 1 damage and make an attacker retreat.",
 		"target":["battlefield", ["control","opponent"], ["type","Unit"]],
 		"effect":["sequence", ["damage", "source", 1, "target"], ["retreat", "target"]]
 		}
@@ -311,14 +348,15 @@
 	// auramancer
 	"pegasus",
 	"knight",
-	"knight",	// figure of destiny
+	"fencer",
+	"droid",
 	"knight",	// freewind equenaut
-	"knight",	// gustcloak sentinel
+	"droid",
 	"sniper",
 	// nobilis of war
 	// somberwald vigilante
 	"ringmaster","ringmaster",
-	// sun titan
+	"giant",
 	"dwarf","dwarf",
 	"robot",
 	"trap","trap",

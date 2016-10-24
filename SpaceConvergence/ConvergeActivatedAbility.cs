@@ -15,6 +15,7 @@ namespace SpaceConvergence
         public readonly Texture2D frame;
         public readonly Texture2D icon;
         public readonly string text;
+        public readonly int textHeight;
         public readonly Color frameColor;
         public readonly ConvergeManaAmount manacost;
         public readonly ConvergeAltCost altCost;
@@ -27,7 +28,8 @@ namespace SpaceConvergence
         {
             frame = Content.Load<Texture2D>(template.getString("frame", "abilityFrame"));
             icon = Content.Load<Texture2D>(template.getString("icon"));
-            text = template.getString("text", "");
+            text = template.getString("text", "").InsertLineBreaks(Game1.font, ConvergeUIAbility.AbilityTooltipWidth - 15);
+            textHeight = (int)Game1.font.MeasureString(text).Y;
             effect = ConvergeCommand.New(template.getArray("effect"), Content);
             frameColor = template.getString("frameColor", "FFFFFF").toColor();
 
@@ -68,6 +70,7 @@ namespace SpaceConvergence
         Texture2D frame { get { return spec.frame; } }
         Texture2D icon { get { return spec.icon; } }
         public string text { get { return spec.text; } }
+        public int textHeight { get { return spec.textHeight; } }
         public ConvergeManaAmount manacost { get { return spec.manacost; } }
         ConvergeCommand effect { get { return spec.effect; } }
         ConvergeZoneId activeZones { get { return spec.activeZones; } }

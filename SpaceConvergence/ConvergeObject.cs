@@ -18,14 +18,15 @@ namespace SpaceConvergence
         Blue = 2,
         Black = 4,
         Red = 8,
-        Green = 16,
+        Green = 0x10,
+        _Multicolored = 0x20,
     }
 
     [Flags]
     public enum ConvergeCardType
     {
         Unit = 1, // creature
-        Support = 2, // land
+        Resource = 2, // land
         Device = 4, // artifact
         Tech = 8, // enchantment
         Augment = 0x10, // Aura
@@ -133,6 +134,7 @@ namespace SpaceConvergence
     {
         public readonly string name;
         public readonly string text;
+        public readonly int textHeight;
         public readonly Texture2D art;
         public readonly ConvergeCardType cardType;
         public readonly int power;
@@ -153,7 +155,8 @@ namespace SpaceConvergence
             string artName = template.getString("art");
             art = Content.Load<Texture2D>(artName);
             name = template.getString("name", artName); // for now
-            text = template.getString("text", "<no text>");
+            text = template.getString("text", "").InsertLineBreaks(Game1.font, ConvergeUIObject.CardTooltipWidth-15);
+            textHeight = (int)Game1.font.MeasureString(text).Y;
             cardType = 0;
             foreach (string name in template.getArray("cardType").asStrings())
             {
@@ -253,12 +256,14 @@ namespace SpaceConvergence
         public readonly int power;
         public readonly int toughness;
         public readonly ConvergeKeyword keywords;
+        public readonly Texture2D new_art;
 
-        public ConvergeEffect_Upgrade(int power, int toughness, ConvergeKeyword keywords, ConvergeObject source, ConvergeDuration duration) : base(source, duration)
+        public ConvergeEffect_Upgrade(int power, int toughness, ConvergeKeyword keywords, ConvergeObject source, Texture2D new_art, ConvergeDuration duration) : base(source, duration)
         {
             this.power = power;
             this.toughness = toughness;
             this.keywords = keywords;
+            this.new_art = new_art;
         }
     }
 
@@ -275,7 +280,7 @@ namespace SpaceConvergence
     public class ConvergeObject
     {
         ConvergeCardSpec original;
-        public Texture2D art { get { return original.art; } }
+        public Texture2D art;
         public ConvergeCardType cardType { get { return original.cardType; } }
         public int power;
         public int effectivePower { get { return power - powerUsed; } }
@@ -290,6 +295,7 @@ namespace SpaceConvergence
         public ConvergeUIObject ui;
         public string name { get { return original.name; } }
         public string text { get { return original.text; } }
+        public int textHeight { get { return original.textHeight; } }
         public delegate void DealsDamage(ConvergeObject source, ConvergeObject target, int damageDealt, bool isCombatDamage);
         public event DealsDamage OnDealsDamage;
 
@@ -320,6 +326,7 @@ namespace SpaceConvergence
         public ConvergeObject(ConvergeCardSpec original, ConvergeZone zone)
         {
             this.original = original;
+            this.art = original.art;
             this.power = original.power;
             this.toughness = original.toughness;
             this.keywords = original.keywords;
@@ -466,7 +473,7 @@ namespace SpaceConvergence
         {
             if(zone.zoneId == ConvergeZoneId.Hand)
             {
-                if(this.cardType.HasFlag(ConvergeCardType.Support))
+                if(this.cardType.HasFlag(ConvergeCardType.Resource))
                 {
                     if(you.numLandsPlayed < you.numLandsPlayable)
                     {
@@ -504,7 +511,7 @@ namespace SpaceConvergence
                         original.actionEffect.Run(context);
                         MoveZone(owner.discardPile);
                     }
-                    else if (this.cardType.HasFlag(ConvergeCardType.Support) && this.activatedAbilities.Count == 0)
+                    else if (this.cardType.HasFlag(ConvergeCardType.Resource) && this.activatedAbilities.Count == 0)
                     {
                         MoveZone(you.resourceZone);
                     }
@@ -594,7 +601,7 @@ namespace SpaceConvergence
             if (cost != null && !you.CanPayCost(cost))
                 return false;
 
-            if (cardType.HasFlag(ConvergeCardType.Support) && you.numLandsPlayed >= you.numLandsPlayable)
+            if (cardType.HasFlag(ConvergeCardType.Resource) && you.numLandsPlayed >= you.numLandsPlayable)
                 return false;
 
             return true;
@@ -700,11 +707,14 @@ namespace SpaceConvergence
             power = original.power;
             toughness = original.toughness;
             keywords = original.keywords;
+            art = original.art;
             foreach (ConvergeEffect_Upgrade upgradeEffect in upgradeEffects)
             {
                 power += upgradeEffect.power;
                 toughness += upgradeEffect.toughness;
                 keywords |= upgradeEffect.keywords;
+                if(upgradeEffect.new_art != null)
+                    art = upgradeEffect.new_art;
             }
             GenerateKeywordsText();
         }
@@ -718,7 +728,23 @@ namespace SpaceConvergence
                 {
                     if (keywordsText != "")
                         keywordsText += ", ";
-                    keywordsText += (ConvergeKeyword)KeywordIdx;
+
+                    ConvergeKeyword keyword = (ConvergeKeyword)KeywordIdx;
+                    switch(keyword)
+                    {
+                        case ConvergeKeyword.CantBlock:
+                            keywordsText += "Can't Block";
+                            break;
+                        case ConvergeKeyword.DoubleStrike:
+                            keywordsText += "Double Strike";
+                            break;
+                        case ConvergeKeyword.FirstStrike:
+                            keywordsText += "First Strike";
+                            break;
+                        default:
+                            keywordsText += (ConvergeKeyword)KeywordIdx;
+                            break;
+                    }
                 }
             }
         }

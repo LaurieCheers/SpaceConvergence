@@ -21,6 +21,9 @@ namespace SpaceConvergence
         bool isVisible;
         List<ConvergeUIAbility> abilityUIs = new List<ConvergeUIAbility>();
 
+        public const int CardTooltipWidth = 225;
+        public const int CardTooltipHeight = 75;
+
         public ConvergeUIObject(ConvergeObject represented)
         {
             this.represented = represented;
@@ -264,10 +267,10 @@ namespace SpaceConvergence
                         highlightColor = Color.Orange;
                 }
 
-                if (isMouseOver && represented.cost != null)
+/*                if (isMouseOver && represented.cost != null)
                 {
                     represented.cost.DrawCost(spriteBatch, new Vector2(gfxFrame.Left, gfxFrame.Top));
-                }
+                }*/
             }
             else if (drawHighlight && !controller.isActivePlayer)
             {
@@ -287,26 +290,69 @@ namespace SpaceConvergence
 
         public void DrawTooltip(SpriteBatch spriteBatch)
         {
-            int tooltipWidth = 200;
-            int tooltipHeight = 130;
+            int effectiveHeight = CardTooltipHeight + represented.textHeight;
             Vector2 pos;
             if (represented.zone.zoneId == ConvergeZoneId.Hand)
             {
-                pos = new Vector2(gfxFrame.Center.X - tooltipWidth/2, gfxFrame.Top - tooltipHeight);
+                pos = new Vector2(gfxFrame.Center.X - CardTooltipWidth / 2, gfxFrame.Top -10 - effectiveHeight);
             }
             else
             {
-                pos = new Vector2(gfxFrame.Right + 10, gfxFrame.Center.Y - tooltipHeight / 2);
+                pos = new Vector2(gfxFrame.Right + 10, gfxFrame.Center.Y - effectiveHeight / 2);
             }
 
             if (pos.Y < 10)
                 pos.Y = 10;
             if (pos.X > 500)
-                pos.X = gfxFrame.Left - 10 - tooltipWidth;
-            spriteBatch.Draw(Game1.cardFrame, new Rectangle((int)pos.X, (int)pos.Y, tooltipWidth, tooltipHeight), Color.White);
+                pos.X = gfxFrame.Left - 10 - CardTooltipWidth;
+
+            RichImage chosenFrame = Game1.cardFrame;
+            if (represented.cost != null)
+            {
+                switch (represented.cost.GetColor())
+                {
+                    case ConvergeColor.Colorless:
+                        chosenFrame = Game1.cardFrame;
+                        break;
+                    case ConvergeColor.White:
+                        chosenFrame = Game1.whiteFrame;
+                        break;
+                    case ConvergeColor.Blue:
+                        chosenFrame = Game1.blueFrame;
+                        break;
+                    case ConvergeColor.Black:
+                        chosenFrame = Game1.blackFrame;
+                        break;
+                    case ConvergeColor.Red:
+                        chosenFrame = Game1.redFrame;
+                        break;
+                    case ConvergeColor.Green:
+                        chosenFrame = Game1.greenFrame;
+                        break;
+                    default:
+                        chosenFrame = Game1.goldFrame;
+                        break;
+                }
+            }
+
+            spriteBatch.Draw(chosenFrame, new Rectangle((int)pos.X, (int)pos.Y, CardTooltipWidth, effectiveHeight), Color.White);
             spriteBatch.DrawString(Game1.font, represented.name, pos + new Vector2(10, 10), Color.Black);
 
-            spriteBatch.DrawString(Game1.font, represented.keywordsText, pos + new Vector2(10, 35), Color.Black);
+            if (represented.cost != null)
+            {
+                represented.cost.DrawResources(spriteBatch, null, pos + new Vector2(CardTooltipWidth-40, 10));
+            }
+
+            if (represented.keywordsText != "")
+            {
+                spriteBatch.DrawString(Game1.font, represented.cardType + " - " + represented.keywordsText, pos + new Vector2(10, 35), Color.Black);
+            }
+            else
+            {
+                spriteBatch.DrawString(Game1.font, ""+ represented.cardType, pos + new Vector2(10, 35), Color.Black);
+            }
+            if(represented.produces != null)
+                represented.produces.DrawCost(spriteBatch, pos + new Vector2(90, 35));
             spriteBatch.DrawString(Game1.font, represented.text, pos + new Vector2(10, 60), Color.Black); 
         }
     }
@@ -328,6 +374,9 @@ namespace SpaceConvergence
         bool isMouseOver;
         bool isMousePressing;
         bool isDragging;
+
+        public const int AbilityTooltipWidth = 200;
+        public const int AbilityTooltipHeight = 45;
 
         public ConvergeUIAbility(ConvergeActivatedAbility ability, Vector2 offset, ConvergeUIObject parent)
         {
@@ -432,15 +481,14 @@ namespace SpaceConvergence
 
         public void DrawTooltip(SpriteBatch spriteBatch)
         {
-            int tooltipWidth = 200;
-            int tooltipHeight = 60;
-            Vector2 pos = new Vector2(frame.Right + 10, frame.Center.Y - tooltipHeight / 2);
+            Vector2 pos = new Vector2(frame.Right + 10, frame.Center.Y - (AbilityTooltipHeight+ability.textHeight) / 2);
 
             if (pos.Y < 10)
                 pos.Y = 10;
             if (pos.X > 500)
-                pos.X = frame.Left - 10 - tooltipWidth;
-            spriteBatch.Draw(Game1.cardFrame, new Rectangle((int)pos.X, (int)pos.Y, tooltipWidth, tooltipHeight), Color.White);
+                pos.X = frame.Left - 10 - AbilityTooltipWidth;
+            spriteBatch.Draw(Game1.cardFrame, new Rectangle((int)pos.X, (int)pos.Y, AbilityTooltipWidth, AbilityTooltipHeight+ability.textHeight), Color.White);
+
             ability.manacost.DrawCost(spriteBatch, pos + new Vector2(10, 10));
             spriteBatch.DrawString(Game1.font, ability.text, pos + new Vector2(10, 35), Color.Black);
         }

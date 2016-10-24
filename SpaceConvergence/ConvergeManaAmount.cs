@@ -76,12 +76,13 @@ namespace SpaceConvergence
             for (int Idx = 0; Idx < amounts.Length; ++Idx)
             {
                 int currentAmount = amounts[Idx];
-                if (currentAmount > 0 || showResources[Idx])
+                if (currentAmount > 0 || (showResources != null && showResources[Idx]))
                 {
                     spriteBatch.Draw(Game1.resourceTextures[Idx], drawPos, Color.White);
                     spriteBatch.DrawString(Game1.font, "" + currentAmount, drawPos + new Vector2(20, 0), currentAmount > 0 ? Color.Black : Color.DarkGreen);
                     drawPos.Y += 20;
-                    showResources[Idx] = true;
+                    if(showResources != null)
+                        showResources[Idx] = true;
                 }
             }
         }
@@ -126,6 +127,19 @@ namespace SpaceConvergence
             }
 
             return true;
+        }
+
+        public ConvergeColor GetColor()
+        {
+            ConvergeColor color = 0;
+            for (int Idx = 1; Idx < amounts.Length; ++Idx)
+            {
+                if(amounts[Idx] > 0)
+                {
+                    color |= (ConvergeColor)(1 << (Idx-1));
+                }
+            }
+            return color;
         }
     }
 }
