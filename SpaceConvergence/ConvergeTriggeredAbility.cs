@@ -12,6 +12,8 @@ namespace SpaceConvergence
     {
         PlayCard,
         DealDamage,
+        EnterPlay,
+        GainLife,
 
         _Count,
     };

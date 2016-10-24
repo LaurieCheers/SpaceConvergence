@@ -14,6 +14,7 @@ namespace SpaceConvergence
     {
         public readonly Texture2D frame;
         public readonly Texture2D icon;
+        public readonly string text;
         public readonly Color frameColor;
         public readonly ConvergeManaAmount manacost;
         public readonly ConvergeAltCost altCost;
@@ -26,6 +27,7 @@ namespace SpaceConvergence
         {
             frame = Content.Load<Texture2D>(template.getString("frame", "abilityFrame"));
             icon = Content.Load<Texture2D>(template.getString("icon"));
+            text = template.getString("text", "");
             effect = ConvergeCommand.New(template.getArray("effect"), Content);
             frameColor = template.getString("frameColor", "FFFFFF").toColor();
 
@@ -65,7 +67,8 @@ namespace SpaceConvergence
 
         Texture2D frame { get { return spec.frame; } }
         Texture2D icon { get { return spec.icon; } }
-        ConvergeManaAmount manacost { get { return spec.manacost; } }
+        public string text { get { return spec.text; } }
+        public ConvergeManaAmount manacost { get { return spec.manacost; } }
         ConvergeCommand effect { get { return spec.effect; } }
         ConvergeZoneId activeZones { get { return spec.activeZones; } }
         ConvergeAltCost altCost { get { return spec.altCost; } }
@@ -98,12 +101,12 @@ namespace SpaceConvergence
                 spriteBatch.Draw(icon, iconRect, Color.Gray);
             }
 
-            if (isMouseOver)
+/*            if (isMouseOver)
             {
                 spriteBatch.Draw(Game1.abilityHighlight, frameRect, Color.White);
 
                 manacost.DrawCost(spriteBatch, new Vector2(frameRect.Left, frameRect.Top - 20));
-            }
+            }*/
         }
 
         public bool CanTarget(ConvergeObject target, ConvergePlayer you)

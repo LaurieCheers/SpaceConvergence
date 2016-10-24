@@ -1,10 +1,13 @@
 {
   "mouseOverGlow":{"texture":"mouseOverGlow", "draw":"stretched9grid", "padding":8},
+  "cardFrame":{"texture":"button3d", "draw":"stretched9grid"},
   "self":{
     "homebase":{"art":"homebase", "cardType":["Home"]},
 	"hand":{"basePos":[125,375], "slotOffset":[50,0], "topLeft":[125,375], "bottomRight":[725,500]},
-	"home":{"basePos":[90,50], "slotOffset":[-15,30], "topLeft":[75,50], "bottomRight":[175,350], "inPlay":true},
-	"defense":{"basePos":[190,50], "slotOffset":[-30,60], "topLeft":[0,0], "bottomRight":[275,500], "inPlay":true},
+	"hand":{"basePos":[125,375], "slotOffset":[50,0], "topLeft":[125,375], "bottomRight":[725,500]},
+	"resources":{"basePos":[55,50], "slotOffset":[-25,0], "topLeft":[0,50], "bottomRight":[95,150], "inPlay":true},
+	"home":{"basePos":[90,50], "slotOffset":[-30,60], "topLeft":[75,50], "bottomRight":[175,350], "inPlay":true},
+	"defense":{"basePos":[205,20], "slotOffset":[-30,60], "topLeft":[0,0], "bottomRight":[275,500], "inPlay":true},
 	"attack":{"basePos":[440,50], "slotOffset":[10,80], "topLeft":[375,0], "bottomRight":[800,500], "inPlay":true},
 	"discardPile":{"basePos":[40,0], "slotOffset":[0,0], "topLeft":[0,0], "bottomRight":[75,60], "isHidden":true},
 	"laboratory":{"basePos":[90,0], "slotOffset":[0,0], "topLeft":[0,0], "bottomRight":[125,60], "isHidden":true},
@@ -13,8 +16,9 @@
   "opponent":{
     "homebase":{"art":"homebase", "cardType":["Home"]},
 	"hand":{"basePos":[540,375], "slotOffset":[-50,0], "topLeft":[140,375], "bottomRight":[740,500]},
-	"home":{"basePos":[640,50], "slotOffset":[15,30], "topLeft":[640,50], "bottomRight":[740,350], "inPlay":true},
-	"defense":{"basePos":[540,50], "slotOffset":[30,60], "topLeft":[490,0], "bottomRight":[800,500], "inPlay":true},
+	"resources":{"basePos":[675,50], "slotOffset":[25,0], "topLeft":[695,50], "bottomRight":[740,150], "inPlay":true},
+	"home":{"basePos":[640,50], "slotOffset":[30,60], "topLeft":[640,50], "bottomRight":[740,350], "inPlay":true},
+	"defense":{"basePos":[525,20], "slotOffset":[30,60], "topLeft":[490,0], "bottomRight":[800,500], "inPlay":true},
 	"attack":{"basePos":[290,50], "slotOffset":[-10,80], "topLeft":[0,50], "bottomRight":[390,500], "inPlay":true},
 	"discardPile":{"basePos":[690,0], "slotOffset":[0,0], "topLeft":[690,0], "bottomRight":[740,60], "isHidden":true},
 	"laboratory":{"basePos":[90,0], "slotOffset":[0,0], "topLeft":[40,0], "bottomRight":[140,60], "isHidden":true},
@@ -27,9 +31,40 @@
 	"armorer":{"art":"armorer", "cardType":["Support"], "produces":"1R"},
 	"pope":{"art":"pope", "cardType":["Support"], "produces":"1W"},
 	"frontiersman":{"art":"frontiersman", "cardType":["Support"], "produces":"1GR"},
-	"bear":{"art":"bear", "cardType":["Unit"], "cost":"CCG", "power":2, "toughness":2},
-	"basilisk":{"art":"basilisk", "cardType":["Unit"], "cost":"CCCG", "power":2, "toughness":5, "keywords":["Deathtouch"]},
-	"beast":{"art":"beast", "cardType":["Unit"], "cost":"CCCCG", "power":5, "toughness":3},
+	"bear":{"art":"bear", "cardType":["Unit"], "cost":"2G", "power":2, "toughness":2, "keywords":["Trample"],
+	"text":"Whenever opponent gains life, this gets upgraded that much.",
+		"triggered":[{
+			"trigger":"GainLife",
+			"triggerPlayer":"opponent",
+			"effect":["upgrade","source","triggerAmount","triggerAmount"]
+		}]
+	},
+	"beast":{"art":"beast", "cardType":["Unit"], "cost":"5GG", "power":2, "toughness":3,
+	"text":"If you play this on a turn when opponent was dealt damage, this gets +3/+3 permanently.",
+	"triggered":[{
+		"trigger":"EnterPlay",
+		"triggerSubject":"source",
+		"condition":"bloodthirst",
+		"effect":["upgrade","source",3,3]
+	}]},
+	"yeti":{"art":"yeti", "cardType":["Unit"], "cost":"3R", "power":2, "toughness":2,
+	"text":"If you play this on a turn when opponent was dealt damage, this gets +1/+1 permanently.",
+	"triggered":[{
+		"trigger":"EnterPlay",
+		"triggerSubject":"source",
+		"condition":"bloodthirst",
+		"effect":["upgrade","source",1,1]
+	}]},
+	"wendigo":{"art":"wendigo", "cardType":["Unit"], "cost":"4RR", "power":3, "toughness":3,
+	"text":"If you play this on a turn when opponent was dealt damage, this gets +2/+2 permanently.",
+	"triggered":[{
+		"trigger":"EnterPlay",
+		"triggerSubject":"source",
+		"condition":"bloodthirst",
+		"effect":["upgrade","source",2,2]
+	}]},
+	"spider":{"art":"spider", "cardType":["Unit"], "cost":"2G", "power":1, "toughness":2, "keywords":["Reach","Deathtouch"]
+	},
 	
 	"angel":{"art":"angel", "cardType":["Unit"], "cost":"CCCCCWW", "power":4, "toughness":4, "keywords":["Flying"]},
 	"lion":{"art":"lion", "cardType":["Unit"], "cost":"CW", "power":2, "toughness":1},
@@ -51,6 +86,20 @@
 		"effect":["sequence",
 			["takeControl", "you", "target", "YourNextTurn"],
 			["untap", "target"]
+		]}
+	]},
+	
+	"barghest":{"art":"barghest", "cardType":["Unit"], "cost":"6GG", "power":5, "toughness":5,
+	"activated":[
+		{"icon":"icon_fight",
+		"frameColor":"88FF88",
+		"manaCost":"2G",
+		"altCost":["Tap"],
+		"text":"Get +1/+1 and fight an enemy.",
+		"target":["battlefield", ["control","opponent"], ["type","Unit"]],
+		"effect":["sequence",
+			["upgrade", "source", 1,1],
+			["fight", "source", "target"]
 		]}
 	]},
 	
@@ -79,11 +128,19 @@
 	}
 	
 	"satyr":{"art":"satyr", "cardType":["Unit"], "cost":"CCG", "power":2, "toughness":1, "activated":[
-		{"icon":"red_munitions", "frameColor":"FF8888", "manaCost":"CR", "altCost":["Sacrifice"], "effect":["produceMana", "3RRR"]}
+		{
+			"icon":"red_munitions",
+			"frameColor":"FF8888",
+			"text":"Produce 3RRR.",
+			"manaCost":"CR",
+			"altCost":["Sacrifice"],
+			"effect":["produceMana", "3RRR"]
+		}
 	]},
 
 	"mutagen":{"art":"mutagen", "cardType":["Augment"], "cost":"CW",
 		"target":["battlefield", ["type","Unit"]],
+		"text":"Implanted unit gains an upgrade ability, permanently.",
 		"effect":["grantActivated", "target", "Permanent", {
 			"icon":"icon_upgrade",
 			"frameColor":"FFAA88",
@@ -93,14 +150,63 @@
 		}]
 	},
 	
-	"king":{"art":"king", "cardType":["Unit"], "cost":"3RW", "power":3, "toughness":2, "keywords":["FirstStrike","Vigilance"], "triggered":[{
+	"fangs":{"art":"fangs", "cardType":["Action"], "cost":"CG",
+		"target":["battlefield", ["control","you"], ["type","Unit"]],
+		"text":"A unit gains a fight ability this turn.",
+		"effect":["grantActivated", "target", "ThisTurn", {
+			"icon":"icon_fight",
+			"frameColor":"88AA44",
+			"uses":1,
+			"text":"Fight a unit.",
+			"target":["battlefield", ["control","opponent"], ["type","Unit"]],
+			"effect":["fight", "source", "target"]
+		}]
+	},
+	
+	"candle":{"art":"candle", "cardType":["Action"], "cost":"CR",
+		"target":["battlefield", ["control","opponent"], ["type","Unit"]],
+		"text":"1 damage to a unit and 1 damage to its controller.",
+		"effect":["sequence", ["damage", "source", 1, "target"], ["damage", "source", 1, "opponent"]]
+	},
+	
+	"dynamite":{"art":"dynamite", "cardType":["Action"], "cost":"2R",
+		"text":"2 damage to all units.",
+		"effect":["damage", "source", 2, ["battlefield", ["type","Unit"]]]
+	},
+	
+	"fire":{"art":"fire", "cardType":["Action"], "cost":"3R",
+		"text":"3 damage to a unit. Your upgraded units get an extra upgrade.",
+		"target":["battlefield", ["type","Unit"]],
+		"effect":["sequence",
+			["damage", "source", 3, "target"],
+			["upgrade", ["battlefield", ["control","you"], "upgraded", ["type","Unit"]], 1, 1]
+		]
+	},
+
+	"missile":{"art":"missile", "cardType":["Action"], "cost":"4R",
+		"text":"You gain a damage dealing ability.",
+		"effect":["grantActivated", "you", "ThisTurn", {
+			"icon":"icon_damage",
+			"frameColor":"FF0000",
+			"uses":4,
+			"text":"1 damage to a unit.",
+			"target":["battlefield", ["control","opponent"], ["type","Unit"]],
+			"effect":["damage", "source", 1, "target"]
+		}]
+	},
+	
+	"king":{"art":"king", "cardType":["Unit"], "cost":"3RW", "power":3, "toughness":2,
+	"text":"Whenever you play a spell on him, your units get +1/+1 and gain Trample until your next turn.",
+	"keywords":["FirstStrike","Vigilance"], "triggered":[{
 		"trigger":"PlayCard",
 		"triggerPlayer":"you",
 		"triggerTarget":"source",
 		"effect":["upgrade",["battlefield",["control","you"], ["type","Unit"]], 1, 1, ["Trample"], "YourNextTurn"]
 	}]},
 	
-	"mammoth":{"art":"mammoth", "cardType":["Unit"], "cost":"5", "power":6, "toughness":6, "keywords":["Trample"], "triggered":[{
+	"mammoth":{"art":"mammoth", "cardType":["Unit"], "cost":"5", "power":6, "toughness":6, "keywords":["Trample"],
+	"text":"Whenever it deals 6 or more damage to opponent, it gains a resource destroying ability.",
+	"triggered":[{
 		"trigger":"DealDamage",
 		"triggerSubject":"source",
 		"triggerTarget":"opponent",
@@ -161,45 +267,43 @@
 
   },
   "mydeck": [
-	"farmer", "farmer", "farmer", "farmer", "farmer", "farmer", "farmer", "farmer", "farmer", "farmer", "farmer",
-	"armorer", "armorer","armorer","armorer","armorer","armorer","armorer","armorer","armorer","armorer",
+	"farmer", "farmer", "farmer", "farmer", "farmer", "farmer",// "farmer", "farmer", "farmer", "farmer", "farmer",
+	"armorer", "armorer","armorer","armorer","armorer","armorer",//"armorer","armorer","armorer","armorer",
 	"frontiersman", "frontiersman",
 	// llanowar reborn x2
 	// skarrg the rage pits
 	
-	// blood ogre x2
+	"yeti","yeti",
 	"baal",
 	// crater hellion
 	// crowned ceratok
-	// deadly recluse x2
+	"spider","spider",
 	"mammoth",
-	// ghor-clan savage
-	// gore-horn minotaurs
-	// kavu predator
-	// krosan tusker
-	// orcish lumberjack
-	// polukranos
-	"satyr",
+	"beast",
+	"wendigo",
+	"bear",
+	"barghest",
+	"satyr","satyr",
 	// skarrgan firebird
 	// skarrgan skybreaker
 	// troll ascetic
-	"yak",
+	"yak","yak",
 	// zhur-taa druid
-	// prey upon
-	// pyroclasm
+	"fangs","fangs",
+	"dynamite",
 	// regrowth
 	// beast within
 	// destructive revelry
-	// shower of sparks
+	"candle",
 	// terrifying presence
-	// volt charge
+	"fire", "fire",
 	"gnome",
 	// fires of yavimaya
 	],
-	//"bear", "beast", "basilisk",
+	// "basilisk",
   "oppdeck": [
-	"armorer","armorer","armorer","armorer","armorer","armorer","armorer","armorer","armorer","armorer","armorer",
-	"pope","pope","pope","pope","pope","pope","pope","pope","pope",
+	"armorer","armorer","armorer","armorer","armorer","armorer",//"armorer","armorer","armorer","armorer","armorer",
+	"pope","pope","pope","pope","pope","pope",//"pope","pope","pope",
 	"frontiersman","frontiersman", // should be red/white
 	// new benalia?
 	"king",
@@ -207,22 +311,22 @@
 	// auramancer
 	"pegasus",
 	"knight",
-	// figure of destiny
-	// freewind equenaut
-	// gustcloak sentinel
+	"knight",	// figure of destiny
+	"knight",	// freewind equenaut
+	"knight",	// gustcloak sentinel
 	"sniper",
 	// nobilis of war
 	// somberwald vigilante
 	"ringmaster","ringmaster",
 	// sun titan
-	"dwarf",
+	"dwarf","dwarf",
 	"robot",
 	"trap","trap",
 	// magma jet
 	// miraculous recovery
 	// moment of heroism
 	// pay no heed
-	// pyrokinesis
+	"missile",
 	// righteousness
 	"bomb",
 	// stand firm

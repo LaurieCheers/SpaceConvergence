@@ -12,6 +12,7 @@ namespace SpaceConvergence
     {
         public ConvergeObject homeBase;
         public ConvergeZone home;
+        public ConvergeZone resourceZone;
         public ConvergeZone attack;
         public ConvergeZone defense;
         public ConvergeZone hand;
@@ -26,11 +27,13 @@ namespace SpaceConvergence
         public bool[] showResources = new bool[6];
         public ConvergePlayer opponent;
         public bool faceLeft;
+        public bool damagedThisTurn { get; private set; }
         public bool isActivePlayer { get { return this == Game1.activePlayer; } }
 
         public ConvergePlayer(JSONTable template, ContentManager Content)
         {
             this.home = new ConvergeZone(template.getJSON("home"), this, ConvergeZoneId.Home);
+            this.resourceZone = new ConvergeZone(template.getJSON("resources"), this, ConvergeZoneId.Resources);
             this.attack = new ConvergeZone(template.getJSON("attack"), this, ConvergeZoneId.Attack);
             this.defense = new ConvergeZone(template.getJSON("defense"), this, ConvergeZoneId.Defense);
             this.hand = new ConvergeZone(template.getJSON("hand"), this, ConvergeZoneId.Hand);
@@ -41,6 +44,7 @@ namespace SpaceConvergence
             zones = new Dictionary<ConvergeZoneId, ConvergeZone>()
             {
                 {ConvergeZoneId.Home, home},
+                {ConvergeZoneId.Resources, resourceZone},
                 {ConvergeZoneId.Attack, attack},
                 {ConvergeZoneId.Defense, defense},
                 {ConvergeZoneId.Hand, hand},
@@ -65,11 +69,17 @@ namespace SpaceConvergence
         public void TakeDamage(int amount)
         {
             life -= amount;
+            damagedThisTurn = true;
         }
 
         public void GainLife(int amount)
         {
             life += amount;
+
+            if (TriggerSystem.HasTriggers(ConvergeTriggerType.GainLife))
+            {
+                TriggerSystem.CheckTriggers(ConvergeTriggerType.GainLife, new TriggerData(this, null, null, amount));
+            }
         }
 
         public void DrawCards(int n)
@@ -92,8 +102,9 @@ namespace SpaceConvergence
 
         public void BeginMyTurn()
         {
+            damagedThisTurn = false;
             resources.Clear();
-            foreach(ConvergeObject obj in home.contents)
+            foreach(ConvergeObject obj in resourceZone.contents)
             {
                 if(obj.produces != null)
                     resources.Add(obj.produces);
@@ -103,14 +114,21 @@ namespace SpaceConvergence
             attack.BeginMyTurn();
             defense.BeginMyTurn();
             home.BeginMyTurn();
+            resourceZone.BeginMyTurn();
             DrawCards(1);
         }
 
         public void EndMyTurn()
         {
-            attack.EndMyTurn();
-            defense.EndMyTurn();
-            home.EndMyTurn();
+            damagedThisTurn = false;
+        }
+
+        public void SufferWounds()
+        {
+            attack.SufferWounds();
+            defense.SufferWounds();
+            home.SufferWounds();
+            resourceZone.SufferWounds();
         }
     }
 }

@@ -33,6 +33,8 @@ namespace SpaceConvergence
             {
                 case "damage":
                     return new ConvergeCommand_Damage(template);
+                case "fight":
+                    return new ConvergeCommand_Fight(template);
                 case "heal":
                     return new ConvergeCommand_Heal(template);
                 case "gainLife":
@@ -86,6 +88,31 @@ namespace SpaceConvergence
                 foreach (ConvergeObject source in sourcesList)
                 {
                     source.DealDamage(victim, amountValue, false);
+                }
+            }
+        }
+    }
+
+    public class ConvergeCommand_Fight : ConvergeCommand
+    {
+        ConvergeSelector sources;
+        ConvergeSelector victims;
+
+        public ConvergeCommand_Fight(JSONArray template)
+        {
+            sources = ConvergeSelector.New(template.getProperty(1));
+            victims = ConvergeSelector.New(template.getProperty(2));
+        }
+
+        public override void Run(ConvergeEffectContext context)
+        {
+            List<ConvergeObject> sourcesList = sources.GetList(context);
+
+            foreach (ConvergeObject victim in victims.GetList(context))
+            {
+                foreach (ConvergeObject source in sourcesList)
+                {
+                    source.Fight(victim, false);
                 }
             }
         }
@@ -395,6 +422,10 @@ namespace SpaceConvergence
                         return new ConvergeSelector_Target();
                     case "subject":
                         return new ConvergeSelector_Subject();
+                    case "upgraded":
+                        return new ConvergeSelector_Upgraded();
+                    case "bloodthirst":
+                        return new ConvergeSelector_Bloodthirst();
                     default:
                         throw new ArgumentException();
                 }
@@ -498,6 +529,22 @@ namespace SpaceConvergence
         public override bool Test(ConvergeObject subject, ConvergeEffectContext context)
         {
             return context.subject == subject;
+        }
+    }
+
+    public class ConvergeSelector_Upgraded : ConvergeSelector
+    {
+        public override bool Test(ConvergeObject subject, ConvergeEffectContext context)
+        {
+            return subject.hasUpgrades;
+        }
+    }
+
+    public class ConvergeSelector_Bloodthirst : ConvergeSelector
+    {
+        public override bool Test(ConvergeObject subject, ConvergeEffectContext context)
+        {
+            return context.you.opponent.damagedThisTurn;
         }
     }
 

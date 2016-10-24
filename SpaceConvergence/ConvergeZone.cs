@@ -92,19 +92,11 @@ namespace SpaceConvergence
             }
         }
 
-        public void EndMyTurn()
+        public void SufferWounds()
         {
-            List<ConvergeObject> deaders = new List<ConvergeObject>();
             foreach (ConvergeObject obj in contents)
             {
-                obj.EndMyTurn();
-                if (obj.dead)
-                    deaders.Add(obj);
-            }
-
-            foreach (ConvergeObject deadObj in deaders)
-            {
-                owner.discardPile.Add(deadObj);
+                obj.SufferWounds();
             }
         }
     }

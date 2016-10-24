@@ -71,6 +71,7 @@ namespace SpaceConvergence
             float MINDRAGSQR = MINDRAG * MINDRAG;
             if (isDragging)
             {
+                Game1.ticking = false;
                 if (isMousePressing)
                 {
                     this.gfxFrame = new Rectangle((int)inputState.MousePos.X - 25, (int)inputState.MousePos.Y - 30, 50, 60);
@@ -169,6 +170,18 @@ namespace SpaceConvergence
 
             ConvergePlayer controller = represented.controller;
 
+            // attack beam
+            if(represented.zone.zoneId == ConvergeZoneId.Attack &&
+                !represented.tapped &&
+                represented.effectivePower > 0 &&
+                !represented.dying &&
+                ((represented.controller == Game1.activePlayer) == (Game1.countdown > 0)))
+            {
+                Rectangle targetFrame = represented.controller.opponent.homeBase.ui.gfxFrame;
+                int thickness = Game1.countdown == 0? 16: 16 + (120 - Game1.countdown)/6;
+                spriteBatch.DrawBeam(Game1.attackBeam, new Vector2(gfxFrame.Center.X, gfxFrame.Bottom), new Vector2(targetFrame.Center.X, targetFrame.Bottom-5), thickness, Color.White);
+            }
+
             Texture2D art = represented.art;
             Color artTint = Color.White;
             if (represented.zone.zoneId == ConvergeZoneId.DiscardPile)
@@ -197,27 +210,30 @@ namespace SpaceConvergence
                 return;
             }
 
-            if (represented.destroyed)
+            if (represented.cardType.HasFlag(ConvergeCardType.Unit))
             {
-                spriteBatch.Draw(Game1.woundbg, new Rectangle(gfxFrame.Center.X - 11, gfxFrame.Center.Y, 22, 16), Color.White);
-                spriteBatch.DrawString(Game1.font, "X", gfxFrame.Center.ToVector2(), TextAlignment.CENTER, Color.Red);
-            }
-            else if (represented.cardType.HasFlag(ConvergeCardType.Unit))
-            {
-                if (represented.wounds > 0)
+                if (represented.power > 0)
                 {
-                    spriteBatch.Draw(Game1.woundbg, new Rectangle(gfxFrame.Center.X - 11, gfxFrame.Center.Y, 22, 16), Color.White);
-                    spriteBatch.DrawString(Game1.font, "-" + represented.wounds, gfxFrame.Center.ToVector2(), TextAlignment.CENTER, Color.Red);
+                    spriteBatch.Draw(Game1.powerbg, new Rectangle(gfxFrame.Left + 8, gfxFrame.Bottom, 16, 16), Color.White);
+                    spriteBatch.DrawString(Game1.font, "" + represented.effectivePower, new Vector2(gfxFrame.Left + 16, gfxFrame.Bottom), TextAlignment.CENTER, represented.powerUsed > 0 ? Color.Red : Color.Yellow);
+                }
+
+                Rectangle toughnessRect = new Rectangle(gfxFrame.Right - 24, gfxFrame.Bottom, 16, 16);
+                Vector2 toughnessTextPos = new Vector2(gfxFrame.Right - 16, gfxFrame.Bottom);
+                if (represented.destroyed)
+                {
+                    spriteBatch.Draw(Game1.woundbg, toughnessRect, Color.White);
+                    spriteBatch.DrawString(Game1.font, "X", toughnessTextPos, TextAlignment.CENTER, Color.Red);
+                }
+                else if (represented.effectiveToughness <= 0)
+                {
+                    spriteBatch.Draw(Game1.woundbg, toughnessRect, Color.White);
+                    spriteBatch.DrawString(Game1.font, ""+ represented.effectiveToughness, toughnessTextPos, TextAlignment.CENTER, Color.Red);
                 }
                 else
                 {
-                    if (represented.power > 0)
-                    {
-                        spriteBatch.Draw(Game1.powerbg, new Rectangle(gfxFrame.Left + 8, gfxFrame.Bottom, 16, 16), Color.White);
-                        spriteBatch.DrawString(Game1.font, "" + represented.effectivePower, new Vector2(gfxFrame.Left + 16, gfxFrame.Bottom), TextAlignment.CENTER, represented.powerUsed > 0? Color.Red : Color.Yellow);
-                    }
                     spriteBatch.Draw(Game1.shieldbg, new Rectangle(gfxFrame.Right - 24, gfxFrame.Bottom, 16, 16), Color.White);
-                    spriteBatch.DrawString(Game1.font, "" + represented.effectiveToughness, new Vector2(gfxFrame.Right - 16, gfxFrame.Bottom), TextAlignment.CENTER, represented.damage > 0 ? Color.Red : Color.White);
+                    spriteBatch.DrawString(Game1.font, "" + represented.effectiveToughness, toughnessTextPos, TextAlignment.CENTER, represented.damage > 0 ? Color.Red : Color.White);
                 }
             }
 
@@ -267,6 +283,31 @@ namespace SpaceConvergence
             {
                 abilityUI.Draw(spriteBatch);
             }
+        }
+
+        public void DrawTooltip(SpriteBatch spriteBatch)
+        {
+            int tooltipWidth = 200;
+            int tooltipHeight = 130;
+            Vector2 pos;
+            if (represented.zone.zoneId == ConvergeZoneId.Hand)
+            {
+                pos = new Vector2(gfxFrame.Center.X - tooltipWidth/2, gfxFrame.Top - tooltipHeight);
+            }
+            else
+            {
+                pos = new Vector2(gfxFrame.Right + 10, gfxFrame.Center.Y - tooltipHeight / 2);
+            }
+
+            if (pos.Y < 10)
+                pos.Y = 10;
+            if (pos.X > 500)
+                pos.X = gfxFrame.Left - 10 - tooltipWidth;
+            spriteBatch.Draw(Game1.cardFrame, new Rectangle((int)pos.X, (int)pos.Y, tooltipWidth, tooltipHeight), Color.White);
+            spriteBatch.DrawString(Game1.font, represented.name, pos + new Vector2(10, 10), Color.Black);
+
+            spriteBatch.DrawString(Game1.font, represented.keywordsText, pos + new Vector2(10, 35), Color.Black);
+            spriteBatch.DrawString(Game1.font, represented.text, pos + new Vector2(10, 60), Color.Black); 
         }
     }
 
@@ -387,6 +428,21 @@ namespace SpaceConvergence
             }
 
             ability.Draw(spriteBatch, isMouseOver, frame);
+        }
+
+        public void DrawTooltip(SpriteBatch spriteBatch)
+        {
+            int tooltipWidth = 200;
+            int tooltipHeight = 60;
+            Vector2 pos = new Vector2(frame.Right + 10, frame.Center.Y - tooltipHeight / 2);
+
+            if (pos.Y < 10)
+                pos.Y = 10;
+            if (pos.X > 500)
+                pos.X = frame.Left - 10 - tooltipWidth;
+            spriteBatch.Draw(Game1.cardFrame, new Rectangle((int)pos.X, (int)pos.Y, tooltipWidth, tooltipHeight), Color.White);
+            ability.manacost.DrawCost(spriteBatch, pos + new Vector2(10, 10));
+            spriteBatch.DrawString(Game1.font, ability.text, pos + new Vector2(10, 35), Color.Black);
         }
     }
 }

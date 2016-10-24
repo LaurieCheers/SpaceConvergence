@@ -39,12 +39,13 @@ namespace SpaceConvergence
     {
         Hand = 1,
         Home = 2, // battlefield (noncreatures)
-        Defense = 4, // battlefield (nonattacking creatures)
-        Attack = 8, // battlefield (attacking creatures)
-        DiscardPile = 0x10, // graveyard
-        Laboratory = 0x20, // library
-        Space = 0x40, // exile
-        Play = Home|Defense|Attack,
+        Resources = 4, // battlefield (lands)
+        Defense = 8, // battlefield (nonattacking creatures)
+        Attack = 0x10, // battlefield (attacking creatures)
+        DiscardPile = 0x20, // graveyard
+        Laboratory = 0x40, // library
+        Space = 0x80, // exile
+        Play = Home|Resources|Defense|Attack,
     };
 
     [Flags]
@@ -61,6 +62,9 @@ namespace SpaceConvergence
         Reach = 0x80,
         Trample = 0x100,
         CantBlock = 0x200,
+        Hunt = 0x400,
+
+        _Last = Hunt,
     };
 
     [Flags]
@@ -127,6 +131,8 @@ namespace SpaceConvergence
 
     public class ConvergeCardSpec
     {
+        public readonly string name;
+        public readonly string text;
         public readonly Texture2D art;
         public readonly ConvergeCardType cardType;
         public readonly int power;
@@ -144,7 +150,10 @@ namespace SpaceConvergence
 
         public ConvergeCardSpec(JSONTable template, ContentManager Content)
         {
-            art = Content.Load<Texture2D>(template.getString("art"));
+            string artName = template.getString("art");
+            art = Content.Load<Texture2D>(artName);
+            name = template.getString("name", artName); // for now
+            text = template.getString("text", "<no text>");
             cardType = 0;
             foreach (string name in template.getArray("cardType").asStrings())
             {
@@ -279,6 +288,8 @@ namespace SpaceConvergence
         public ConvergeKeyword keywords;
         public int slot;
         public ConvergeUIObject ui;
+        public string name { get { return original.name; } }
+        public string text { get { return original.text; } }
         public delegate void DealsDamage(ConvergeObject source, ConvergeObject target, int damageDealt, bool isCombatDamage);
         public event DealsDamage OnDealsDamage;
 
@@ -287,15 +298,19 @@ namespace SpaceConvergence
         List<ConvergeEffect_Upgrade> upgradeEffects = new List<ConvergeEffect_Upgrade>();
         List<ConvergeEffect_GainActivated> extraActivatedEffects = new List<ConvergeEffect_GainActivated>();
 
+        public bool hasUpgrades { get { return upgradeEffects.Count > 0; } }
+
         public int powerUsed;
         public int damage;
-        public int wounds;
         public bool destroyed;
         public bool tapped;
-        public bool dead;
         public List<ConvergeActivatedAbility> activatedAbilities;
         public List<ConvergeTriggeredAbility> triggeredAbilities;
         List<ConvergeActivatedAbility> originalActivatedAbilities;
+
+        public string keywordsText { get; private set; }
+
+        public bool dying { get { return cardType.HasFlag(ConvergeCardType.Unit) && (damage >= toughness || destroyed); } }
 
         public Vector2 nominalPosition
         {
@@ -308,6 +323,7 @@ namespace SpaceConvergence
             this.power = original.power;
             this.toughness = original.toughness;
             this.keywords = original.keywords;
+            GenerateKeywordsText();
             this.owner = zone.owner;
             this.controller = owner;
             this.originalActivatedAbilities = new List<ConvergeActivatedAbility>();
@@ -344,11 +360,13 @@ namespace SpaceConvergence
         public void UseOn(ConvergeObject target)
         {
             if (this.cardType.HasFlag(ConvergeCardType.Unit) && target.cardType.HasFlag(ConvergeCardType.Unit) &&
-                target.zone.zoneId == ConvergeZoneId.Attack &&
                 this.controller != target.controller
                 )
             {
-                // see if we can block this creature
+                // see if we can fight this creature
+                if (target.zone.zoneId != ConvergeZoneId.Attack)
+                    return;
+
                 if (this.tapped)
                     return;
 
@@ -367,7 +385,7 @@ namespace SpaceConvergence
                 if (!target.keywords.HasFlag(ConvergeKeyword.Trample))
                     target.tapped = true;
 
-                Fight(target);
+                Fight(target, true);
             }
             else if(original.actionTarget != null && zone.zoneId == ConvergeZoneId.Hand)
             {
@@ -376,8 +394,11 @@ namespace SpaceConvergence
             }
         }
 
-        public void Fight(ConvergeObject target)
+        public void Fight(ConvergeObject target, bool isCombatDamage)
         {
+            if (dying || target.dying)
+                return;
+
             int selfPowerUsed = GetPowerToUse(target.effectiveToughness);
             powerUsed += selfPowerUsed;
             
@@ -421,14 +442,14 @@ namespace SpaceConvergence
                 dealtNormalDamage = selfPowerUsed;
             }
 
-            DealDamage(target, dealtFirstDamage, true);
-            target.DealDamage(this, incomingFirstDamage, true);
+            DealDamage(target, dealtFirstDamage, isCombatDamage);
+            target.DealDamage(this, incomingFirstDamage, isCombatDamage);
 
-            if(wounds == 0 && target.wounds == 0)
-            {
-                DealDamage(target, dealtNormalDamage, true);
-                target.DealDamage(this, incomingNormalDamage, true);
-            }
+            if (dying || target.dying)
+                return;
+
+            DealDamage(target, dealtNormalDamage, isCombatDamage);
+            target.DealDamage(this, incomingNormalDamage, isCombatDamage);
         }
 
         int GetPowerToUse(int targetEffectiveToughness)
@@ -462,6 +483,11 @@ namespace SpaceConvergence
                     return;
                 }
 
+                if (TriggerSystem.HasTriggers(ConvergeTriggerType.PlayCard))
+                {
+                    TriggerSystem.CheckTriggers(ConvergeTriggerType.PlayCard, new TriggerData(you, this, null, 0));
+                }
+
                 if (you.TryPayCost(cost))
                 {
                     if (this.cardType.HasFlag(ConvergeCardType.Unit))
@@ -471,6 +497,16 @@ namespace SpaceConvergence
                         {
                             tapped = true;
                         }
+                    }
+                    else if (this.cardType.HasFlag(ConvergeCardType.Action))
+                    {
+                        ConvergeEffectContext context = new ConvergeEffectContext(this, you);
+                        original.actionEffect.Run(context);
+                        MoveZone(owner.discardPile);
+                    }
+                    else if (this.cardType.HasFlag(ConvergeCardType.Support) && this.activatedAbilities.Count == 0)
+                    {
+                        MoveZone(you.resourceZone);
                     }
                     else
                     {
@@ -532,13 +568,7 @@ namespace SpaceConvergence
             }
             else
             {
-                if (effectiveToughness <= amount)
-                {
-                    wounds += 1 + amount - effectiveToughness;
-                }
                 damage += amount;
-                if (damage > toughness)
-                    damage = toughness;
                 if (source.keywords.HasFlag(ConvergeKeyword.Deathtouch))
                 {
                     destroyed = true;
@@ -548,10 +578,10 @@ namespace SpaceConvergence
 
         public void Heal(int amount)
         {
-            if (wounds > amount)
-                wounds -= amount;
+            if (damage > amount)
+                damage -= amount;
             else
-                wounds = 0;
+                damage = 0;
         }
 
         public void MoveZone(ConvergeZone newZone)
@@ -615,7 +645,7 @@ namespace SpaceConvergence
 
         public void BeginMyTurn()
         {
-            if(zone.zoneId == ConvergeZoneId.Attack && !tapped && !destroyed && wounds == 0)
+            if(zone.zoneId == ConvergeZoneId.Attack && !tapped && !dying)
                 DealDamage(controller.opponent.homeBase, effectivePower, true);
             
             if (keywords.HasFlag(ConvergeKeyword.Vigilance))
@@ -628,12 +658,11 @@ namespace SpaceConvergence
             powerUsed = 0;
         }
 
-        public void EndMyTurn()
+        public void SufferWounds()
         {
-            if (destroyed || wounds > 0)
+            if (dying)
             {
-                dead = true;
-                //MoveZone(controller.discardPile);
+                MoveZone(controller.discardPile);
             }
         }
 
@@ -671,11 +700,26 @@ namespace SpaceConvergence
             power = original.power;
             toughness = original.toughness;
             keywords = original.keywords;
-            foreach(ConvergeEffect_Upgrade upgradeEffect in upgradeEffects)
+            foreach (ConvergeEffect_Upgrade upgradeEffect in upgradeEffects)
             {
                 power += upgradeEffect.power;
                 toughness += upgradeEffect.toughness;
                 keywords |= upgradeEffect.keywords;
+            }
+            GenerateKeywordsText();
+        }
+
+        void GenerateKeywordsText()
+        {
+            keywordsText = "";
+            for(int KeywordIdx = 1; KeywordIdx <= (int)ConvergeKeyword._Last; KeywordIdx <<= 1)
+            {
+                if (keywords.HasFlag((ConvergeKeyword)KeywordIdx))
+                {
+                    if (keywordsText != "")
+                        keywordsText += ", ";
+                    keywordsText += (ConvergeKeyword)KeywordIdx;
+                }
             }
         }
 
@@ -704,6 +748,11 @@ namespace SpaceConvergence
             {
                 controller.resources.Add(produces);
             }
+
+            if (TriggerSystem.HasTriggers(ConvergeTriggerType.EnterPlay))
+            {
+                TriggerSystem.CheckTriggers(ConvergeTriggerType.EnterPlay, new TriggerData(controller, this, null, 0));
+            }
         }
 
         // this is called after the object has actually been added to its new zone
@@ -715,10 +764,8 @@ namespace SpaceConvergence
             }
 
             damage = 0;
-            wounds = 0;
             destroyed = false;
             tapped = false;
-            dead = false;
             Game1.inPlayList.Remove(this);
             controlEffects.Clear();
             UpdateController();

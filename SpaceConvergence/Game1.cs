@@ -40,8 +40,15 @@ namespace SpaceConvergence
         public static Texture2D targetBeam;
         public static Texture2D badTargetArrow;
         public static Texture2D badTargetBeam;
+        public static Texture2D attackBeam;
 
         public static RichImage mouseOverGlow;
+        public static RichImage cardFrame;
+
+        UIButton endTurnButton;
+        bool endTurnPressed;
+        public static int countdown { get; private set; }
+        public static bool ticking;
 
         public Game1()
         {
@@ -76,6 +83,7 @@ namespace SpaceConvergence
             data = new JSONTable("Content/data.json");
 
             mouseOverGlow = new RichImage(data.getJSON("mouseOverGlow"), Content);
+            cardFrame = new RichImage(data.getJSON("cardFrame"), Content);
 
             font = Content.Load<SpriteFont>("Arial");
             shieldbg = Content.Load<Texture2D>("shieldbg");
@@ -87,6 +95,7 @@ namespace SpaceConvergence
             targetBeam = Content.Load<Texture2D>("targetBeam");
             badTargetArrow = Content.Load<Texture2D>("badTargetArrow");
             badTargetBeam = Content.Load<Texture2D>("badTargetBeam");
+            attackBeam = Content.Load<Texture2D>("attackBeam");
 
             resourceTextures = new Texture2D[]
             {
@@ -109,7 +118,8 @@ namespace SpaceConvergence
             ui.Add(new ConvergeUIObject(opponent.homeBase));
 
             UIButtonStyle defaultStyle = UIButton.GetDefaultStyle(Content);
-            ui.Add(new UIButton("End Turn", new Rectangle(600, 400, 80, 40), defaultStyle, EndTurn_onPress));
+            endTurnButton = new UIButton("End Turn", new Rectangle(600, 400, 80, 40), defaultStyle, EndTurn_onPress);
+            ui.Add(endTurnButton);
 
             JSONTable allCardsTemplate = data.getJSON("cards");
             foreach (string cardName in allCardsTemplate.Keys)
@@ -138,18 +148,37 @@ namespace SpaceConvergence
 
             activePlayer = self;
             self.BeginMyTurn();
+            opponent.numLandsPlayed = 1; // can't play a land in your first response phase
         }
 
         public void EndTurn_onPress()
         {
+            endTurnPressed = true;
+        }
+
+        public void EndTurn_startTimer()
+        {
+            activePlayer.SufferWounds();
+            UpdateZoneChanges();
             activePlayer.EndMyTurn();
             activePlayer = activePlayer.opponent;
+            endTurnButton.visible = false;
+            countdown = 30;
+        }
+
+        public void EndTurn_timerExpired()
+        {
+            activePlayer.SufferWounds();
+            UpdateZoneChanges();
+//            activePlayer = activePlayer.opponent;
             activePlayer.BeginMyTurn();
 
             foreach (ConvergeObject obj in Game1.inPlayList)
             {
                 obj.BeginAnyTurn(activePlayer);
             }
+
+            endTurnButton.visible = true;
         }
 
         /// <summary>
@@ -170,10 +199,27 @@ namespace SpaceConvergence
         {
             inputState.Update();
 
+            ticking = (countdown > 0);
+
             inputState.hoveringElement = ui.GetMouseHover(inputState.MousePos);
 
             UpdateZoneChanges();
             ui.Update(inputState);
+
+            if(endTurnPressed)
+            {
+                EndTurn_startTimer();
+                endTurnPressed = false;
+            }
+
+            if (ticking)
+            {
+                countdown--;
+                if(countdown == 0)
+                {
+                    EndTurn_timerExpired();
+                }
+            }
 
             base.Update(gameTime);
         }
@@ -212,6 +258,19 @@ namespace SpaceConvergence
             // TODO: Add your drawing code here
             spriteBatch.Begin();
             ui.Draw(spriteBatch);
+            if(countdown > 0)
+            {
+                spriteBatch.DrawString(font, "" + countdown, new Vector2(620, 420), Color.Black);
+            }
+
+            if(inputState.hoveringElement is ConvergeUIObject)
+            {
+                ((ConvergeUIObject)inputState.hoveringElement).DrawTooltip(spriteBatch);
+            }
+            else if (inputState.hoveringElement is ConvergeUIAbility)
+            {
+                ((ConvergeUIAbility)inputState.hoveringElement).DrawTooltip(spriteBatch);
+            }
             spriteBatch.End();
 
             base.Draw(gameTime);

@@ -164,6 +164,14 @@ namespace LRCEngine
             }
         }
 
+        public static void DrawBeam(this SpriteBatch spriteBatch, Texture2D texture, Vector2 start, Vector2 end, int thickness, Color color)
+        {
+            Vector2 offset = end - start;
+            float beamRotation = offset.ToAngle();
+            Rectangle beamRect = new Rectangle((int)start.X, (int)start.Y, (int)offset.Length(), thickness);
+            spriteBatch.Draw(texture, beamRect, null, color, beamRotation, new Vector2(0, texture.Height/2), SpriteEffects.None, 0.0f);
+        }
+
         public static Rectangle GetStringBounds(this SpriteFont font, string text, Vector2 position, TextAlignment alignment)
         {
             Vector2 size = font.MeasureString(text);
