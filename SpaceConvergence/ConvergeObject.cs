@@ -132,25 +132,34 @@ namespace SpaceConvergence
 
     public class ConvergeCardSpec
     {
-        public readonly string name;
-        public readonly string text;
-        public readonly int textHeight;
-        public readonly Texture2D art;
-        public readonly ConvergeCardType cardType;
-        public readonly int power;
-        public readonly int toughness;
-        public readonly ConvergeManaAmount produces;
-        public readonly ConvergeManaAmount cost;
-        public readonly ConvergeKeyword keywords;
-        public readonly List<ConvergeActivatedAbilitySpec> activatedAbilities;
-        public readonly List<ConvergeTriggeredAbilitySpec> triggeredAbilities;
+        public string name { get; private set; }
+        public string text { get; private set; }
+        public int textHeight { get; private set; }
+        public Texture2D art { get; private set; }
+        public ConvergeCardType cardType { get; private set; }
+        public int power { get; private set; }
+        public int toughness { get; private set; }
+        public ConvergeManaAmount produces { get; private set; }
+        public ConvergeManaAmount cost { get; private set; }
+        public ConvergeKeyword keywords { get; private set; }
+        public List<ConvergeActivatedAbilitySpec> activatedAbilities { get; private set; }
+        public List<ConvergeTriggeredAbilitySpec> triggeredAbilities { get; private set; }
 
-        public readonly ConvergeSelector actionTarget;
-        public readonly ConvergeCommand actionEffect;
+        public ConvergeSelector actionTarget { get; private set; }
+        public ConvergeCommand actionEffect { get; private set; }
 
         public static readonly Dictionary<string, ConvergeCardSpec> allCards = new Dictionary<string, ConvergeCardSpec>();
 
+        public ConvergeCardSpec()
+        {
+        }
+
         public ConvergeCardSpec(JSONTable template, ContentManager Content)
+        {
+            Init(template, Content);
+        }
+
+        public void Init(JSONTable template, ContentManager Content)
         {
             string artName = template.getString("art");
             art = Content.Load<Texture2D>(artName);
@@ -277,6 +286,16 @@ namespace SpaceConvergence
         }
     }
 
+    public class ConvergeEffect_GainTriggered : ConvergeEffect
+    {
+        public readonly ConvergeTriggeredAbility ability;
+
+        public ConvergeEffect_GainTriggered(ConvergeTriggeredAbilitySpec abilitySpec, ConvergeObject subject, ConvergeObject source, ConvergeDuration duration) : base(source, duration)
+        {
+            this.ability = new ConvergeTriggeredAbility(abilitySpec, subject);
+        }
+    }
+
     public class ConvergeObject
     {
         ConvergeCardSpec original;
@@ -303,6 +322,7 @@ namespace SpaceConvergence
         List<ConvergeEffect_Control> controlEffects = new List<ConvergeEffect_Control>();
         List<ConvergeEffect_Upgrade> upgradeEffects = new List<ConvergeEffect_Upgrade>();
         List<ConvergeEffect_GainActivated> extraActivatedEffects = new List<ConvergeEffect_GainActivated>();
+        List<ConvergeEffect_GainTriggered> extraTriggeredEffects = new List<ConvergeEffect_GainTriggered>();
 
         public bool hasUpgrades { get { return upgradeEffects.Count > 0; } }
 
@@ -313,6 +333,7 @@ namespace SpaceConvergence
         public List<ConvergeActivatedAbility> activatedAbilities;
         public List<ConvergeTriggeredAbility> triggeredAbilities;
         List<ConvergeActivatedAbility> originalActivatedAbilities;
+        List<ConvergeTriggeredAbility> originalTriggeredAbilities;
 
         public string keywordsText { get; private set; }
 
@@ -340,11 +361,12 @@ namespace SpaceConvergence
             }
             activatedAbilities = originalActivatedAbilities;
 
-            this.triggeredAbilities = new List<ConvergeTriggeredAbility>();
+            this.originalTriggeredAbilities = new List<ConvergeTriggeredAbility>();
             foreach (ConvergeTriggeredAbilitySpec spec in original.triggeredAbilities)
             {
-                triggeredAbilities.Add(new ConvergeTriggeredAbility(spec, this));
+                originalTriggeredAbilities.Add(new ConvergeTriggeredAbility(spec, this));
             }
+            this.triggeredAbilities = originalTriggeredAbilities;
             MoveZone(zone);
         }
 
@@ -363,6 +385,11 @@ namespace SpaceConvergence
             extraActivatedEffects.Add(gainActivatedEffect);
             UpdateActivated();
         }
+        public void AddEffect(ConvergeEffect_GainTriggered gainTriggeredEffect)
+        {
+            extraTriggeredEffects.Add(gainTriggeredEffect);
+            UpdateTriggered();
+        }
 
         public void UseOn(ConvergeObject target)
         {
@@ -374,7 +401,7 @@ namespace SpaceConvergence
                 if (target.zone.zoneId != ConvergeZoneId.Attack)
                     return;
 
-                if (this.tapped)
+                if (this.tapped || this.keywords.HasFlag(ConvergeKeyword.CantBlock))
                     return;
 
                 if (this.zone.zoneId != ConvergeZoneId.Defense && this.zone.zoneId != ConvergeZoneId.Attack && !this.keywords.HasFlag(ConvergeKeyword.Vigilance))
@@ -652,8 +679,15 @@ namespace SpaceConvergence
 
         public void BeginMyTurn()
         {
-            if(zone.zoneId == ConvergeZoneId.Attack && !tapped && !dying)
+            if (zone.zoneId == ConvergeZoneId.Attack && !tapped && !dying)
+            {
                 DealDamage(controller.opponent.homeBase, effectivePower, true);
+
+                if(keywords.HasFlag(ConvergeKeyword.DoubleStrike))
+                {
+                    DealDamage(controller.opponent.homeBase, effectivePower, true);
+                }
+            }
             
             if (keywords.HasFlag(ConvergeKeyword.Vigilance))
             {
@@ -683,6 +717,9 @@ namespace SpaceConvergence
 
             if (extraActivatedEffects.TickTurn())
                 UpdateActivated();
+
+            if (extraTriggeredEffects.TickTurn())
+                UpdateTriggered();
         }
 
         void UpdateController()
@@ -755,6 +792,25 @@ namespace SpaceConvergence
             foreach(ConvergeEffect_GainActivated effect in extraActivatedEffects)
             {
                 activatedAbilities.Add(effect.ability);
+            }
+        }
+
+        void UpdateTriggered()
+        {
+            foreach (ConvergeTriggeredAbility triggeredAbility in triggeredAbilities)
+            {
+                triggeredAbility.OnLeavingPlay();
+            }
+
+            triggeredAbilities = originalTriggeredAbilities.ToList();
+            foreach (ConvergeEffect_GainTriggered effect in extraTriggeredEffects)
+            {
+                triggeredAbilities.Add(effect.ability);
+            }
+
+            foreach (ConvergeTriggeredAbility triggeredAbility in triggeredAbilities)
+            {
+                triggeredAbility.OnEnteringPlay();
             }
         }
 

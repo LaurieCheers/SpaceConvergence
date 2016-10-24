@@ -136,7 +136,10 @@ namespace SpaceConvergence
             JSONTable allCardsTemplate = data.getJSON("cards");
             foreach (string cardName in allCardsTemplate.Keys)
             {
-                ConvergeCardSpec.allCards.Add(cardName, new ConvergeCardSpec(allCardsTemplate.getJSON(cardName), Content));
+                ConvergeCardSpec newSpec = new ConvergeCardSpec();
+                ConvergeCardSpec.allCards.Add(cardName, newSpec);
+
+                newSpec.Init(allCardsTemplate.getJSON(cardName), Content);
             }
 
             foreach(string cardName in data.getArray("mydeck").asStrings())
@@ -239,11 +242,23 @@ namespace SpaceConvergence
         void UpdateZoneChanges()
         {
             bool didAnything = zoneChanges.Count > 0;
-            foreach (KeyValuePair<ConvergeObject, ConvergeZone> kv in zoneChanges)
+            for(int Idx = 0; Idx < zoneChanges.Count; ++Idx)
             {
+                KeyValuePair<ConvergeObject, ConvergeZone> kv = zoneChanges[Idx];
                 ConvergeObject obj = kv.Key;
                 ConvergeZone newZone = kv.Value;
+
+                if (newZone.zoneId == ConvergeZoneId.DiscardPile && TriggerSystem.HasTriggers(ConvergeTriggerType.Discarded))
+                {
+                    TriggerSystem.CheckTriggers(ConvergeTriggerType.Discarded, new TriggerData(newZone.owner, null, obj, 0));
+                }
+
                 newZone.Add(obj);
+
+                if (newZone.inPlay && TriggerSystem.HasTriggers(ConvergeTriggerType.EnterPlay))
+                {
+                    TriggerSystem.CheckTriggers(ConvergeTriggerType.EnterPlay, new TriggerData(newZone.owner, obj, null, 0));
+                }
 
                 if (obj.ui == null && !newZone.isHidden && obj.zone == newZone)
                 {

@@ -56,6 +56,8 @@ namespace SpaceConvergence
                     return new ConvergeCommand_ProduceMana(template);
                 case "grantActivated":
                     return new ConvergeCommand_GrantActivated(template, Content);
+                case "grantTriggered":
+                    return new ConvergeCommand_GrantTriggered(template, Content);
                 case "spawn":
                     return new ConvergeCommand_Spawn(template, Content);
                 case "sequence":
@@ -343,6 +345,28 @@ namespace SpaceConvergence
         }
     }
 
+    public class ConvergeCommand_GrantTriggered : ConvergeCommand
+    {
+        ConvergeSelector subjects;
+        ConvergeDuration duration;
+        ConvergeTriggeredAbilitySpec abilitySpec;
+
+        public ConvergeCommand_GrantTriggered(JSONArray template, ContentManager Content)
+        {
+            subjects = ConvergeSelector.New(template.getProperty(1));
+            duration = (ConvergeDuration)Enum.Parse(typeof(ConvergeDuration), template.getString(2));
+            abilitySpec = new ConvergeTriggeredAbilitySpec(template.getJSON(3), Content);
+        }
+
+        public override void Run(ConvergeEffectContext context)
+        {
+            foreach (ConvergeObject subject in subjects.GetList(context))
+            {
+                subject.AddEffect(new ConvergeEffect_GainTriggered(abilitySpec, subject, context.source, duration));
+            }
+        }
+    }
+
     public class ConvergeCommand_Spawn : ConvergeCommand
     {
         ConvergeSelector players;
@@ -360,7 +384,12 @@ namespace SpaceConvergence
         {
             foreach (ConvergeObject player in players.GetList(context))
             {
-                new ConvergeObject(cardSpec, player.controller.GetZone(zoneId));
+                ConvergeZone spawnZone = player.controller.GetZone(zoneId);
+                ConvergeObject newSpawned = new ConvergeObject(cardSpec, spawnZone);
+                if(spawnZone.inPlay && newSpawned.cardType.HasFlag(ConvergeCardType.Unit))
+                {
+                    newSpawned.tapped = true;
+                }
             }
         }
     }

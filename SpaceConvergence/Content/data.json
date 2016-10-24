@@ -112,7 +112,7 @@
 	"droid":{"art":"droid", "cardType":["Unit"], "cost":"1W", "power":1, "toughness":1,
 	"activated":[
 		{"icon":"icon_upgrade",
-		"frameColor":"888866",
+		"frameColor":"AAAA66",
 		"manaCost":"1",
 		"text":"Gain +1/+1 permanently.",
 		"uses":1,
@@ -120,7 +120,7 @@
 			["upgrade", "source", 1,1, [], "Permanent", "droid2"],
 			["grantActivated", "source", "Permanent", {
 				"icon":"icon_upgrade",
-				"frameColor":"999955",
+				"frameColor":"AAAA66",
 				"uses":1,
 				"manaCost":"3",
 				"text":"Gain +2/+2 permanently.",
@@ -128,7 +128,7 @@
 					["upgrade", "source", 2,2, [], "Permanent", "droid3"],
 					["grantActivated", "source", "Permanent", {
 						"icon":"icon_upgrade",
-						"frameColor":"AAAA44",
+						"frameColor":"AAAA66",
 						"manaCost":"6",
 						"uses":1,
 						"text":"Gain +4/+4, Flying and First Strike permanently.",
@@ -184,6 +184,34 @@
 			"text":"Gain +1/+1 permanently.",
 			"effect":["upgrade", "source", 1, 1]
 		}]
+	},
+	
+	"drone_unit":{"art":"drone", "cardType":["Unit"], "cost":"3W", "power":2, "toughness":2, "keywords":["Flying"]},
+
+	"drone":{"art":"drone", "cardType":["Augment"], "cost":"3W",
+		"target":["battlefield", ["type","Unit"]],
+		"text":"Implanted unit gains +2/+2 and flying. When it dies, spawn a 2/2 flying drone.",
+		"effect":["sequence",
+			["upgrade", "target", 2,2, ["Flying"], "Permanent"],
+			["grantTriggered", "target", "Permanent", {
+				"trigger":"Discarded",
+				"triggerTarget":"source",
+				"effect":["spawn", "you", "drone_unit"]
+			}]
+		]
+	},
+	
+	"muscle":{"art":"muscle", "cardType":["Augment"], "cost":"3R",
+		"target":["battlefield", ["type","Unit"]],
+		"text":"Implanted unit gains +2/+2 and can't block. When it dies, return this to your hand.",
+		"effect":["sequence",
+			["upgrade", "target", 2,2, ["CantBlock"], "Permanent"],
+			["grantTriggered", "target", "Permanent", {
+				"trigger":"Discarded",
+				"triggerTarget":"source",
+				"effect":["spawn", "you", "muscle", "Hand"]
+			}]
+		]
 	},
 	
 	"fangs":{"art":"fangs", "cardType":["Action"], "cost":"CG",
@@ -371,9 +399,9 @@
 	// battle mastery
 	// bonds of faith
 	"mutagen",
-	// griffin guide
+	"drone",
 	// ordeal of purphoros?
-	// undying rage
+	"muscle",
 	]
 //  "oppdeck": [ "pope", "pope", "pope", "pope", "pope", "pope", "lion", "angel", "lion", "cardinal" ]
 }

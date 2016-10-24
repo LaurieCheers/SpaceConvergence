@@ -13,6 +13,7 @@ namespace SpaceConvergence
         PlayCard,
         DealDamage,
         EnterPlay,
+        Discarded,
         GainLife,
 
         _Count,
