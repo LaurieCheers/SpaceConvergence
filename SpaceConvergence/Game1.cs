@@ -247,6 +247,7 @@ namespace SpaceConvergence
                 KeyValuePair<ConvergeObject, ConvergeZone> kv = zoneChanges[Idx];
                 ConvergeObject obj = kv.Key;
                 ConvergeZone newZone = kv.Value;
+                ConvergeZone oldZone = obj.zone;
 
                 if (newZone.zoneId == ConvergeZoneId.DiscardPile && TriggerSystem.HasTriggers(ConvergeTriggerType.Discarded))
                 {
@@ -255,7 +256,7 @@ namespace SpaceConvergence
 
                 newZone.Add(obj);
 
-                if (newZone.inPlay && TriggerSystem.HasTriggers(ConvergeTriggerType.EnterPlay))
+                if (newZone.inPlay && (oldZone == null || !oldZone.inPlay) && TriggerSystem.HasTriggers(ConvergeTriggerType.EnterPlay))
                 {
                     TriggerSystem.CheckTriggers(ConvergeTriggerType.EnterPlay, new TriggerData(newZone.owner, obj, null, 0));
                 }

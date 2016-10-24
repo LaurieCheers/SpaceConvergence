@@ -29,6 +29,7 @@ namespace SpaceConvergence
         public bool faceLeft;
         public bool damagedThisTurn { get; private set; }
         public bool isActivePlayer { get { return this == Game1.activePlayer; } }
+        public bool skipMana;
 
         public ConvergePlayer(JSONTable template, ContentManager Content)
         {
@@ -64,6 +65,11 @@ namespace SpaceConvergence
         public bool TryPayCost(ConvergeManaAmount cost)
         {
             return resources.TrySpend(cost);
+        }
+
+        public void SkipMana()
+        {
+            skipMana = true;
         }
 
         public void TakeDamage(int amount)
@@ -103,11 +109,19 @@ namespace SpaceConvergence
         public void BeginMyTurn()
         {
             damagedThisTurn = false;
-            resources.Clear();
-            foreach(ConvergeObject obj in resourceZone.contents)
+
+            if (skipMana)
             {
-                if(obj.produces != null)
-                    resources.Add(obj.produces);
+                skipMana = false;
+            }
+            else
+            {
+                resources.Clear();
+                foreach (ConvergeObject obj in resourceZone.contents)
+                {
+                    if (obj.produces != null)
+                        resources.Add(obj.produces);
+                }
             }
 
             numLandsPlayed = 0;

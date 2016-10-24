@@ -52,8 +52,12 @@ namespace SpaceConvergence
                     return new ConvergeCommand_Upgrade(template, Content);
                 case "destroy":
                     return new ConvergeCommand_Destroy(template);
+                case "sacrifice":
+                    return new ConvergeCommand_Sacrifice(template);
                 case "produceMana":
                     return new ConvergeCommand_ProduceMana(template);
+                case "skipMana":
+                    return new ConvergeCommand_SkipMana(template);
                 case "grantActivated":
                     return new ConvergeCommand_GrantActivated(template, Content);
                 case "grantTriggered":
@@ -265,6 +269,24 @@ namespace SpaceConvergence
         }
     }
 
+    public class ConvergeCommand_SkipMana : ConvergeCommand
+    {
+        ConvergeSelector affected;
+
+        public ConvergeCommand_SkipMana(JSONArray template)
+        {
+            affected = ConvergeSelector.New(template.getProperty(1));
+        }
+
+        public override void Run(ConvergeEffectContext context)
+        {
+            foreach (ConvergeObject player in affected.GetList(context))
+            {
+                player.controller.SkipMana();
+            }
+        }
+    }
+
     public class ConvergeCommand_Upgrade : ConvergeCommand
     {
         ConvergeSelector patients;
@@ -319,6 +341,24 @@ namespace SpaceConvergence
             foreach(ConvergeObject victim in victims.GetList(context))
             {
                 victim.destroyed = true;
+            }
+        }
+    }
+
+    public class ConvergeCommand_Sacrifice : ConvergeCommand
+    {
+        ConvergeSelector victims;
+
+        public ConvergeCommand_Sacrifice(JSONArray template)
+        {
+            victims = ConvergeSelector.New(template.getProperty(1));
+        }
+
+        public override void Run(ConvergeEffectContext context)
+        {
+            foreach (ConvergeObject victim in victims.GetList(context))
+            {
+                victim.MoveZone(victim.owner.GetZone(ConvergeZoneId.DiscardPile));
             }
         }
     }
@@ -460,6 +500,8 @@ namespace SpaceConvergence
                         return new ConvergeSelector_Upgraded();
                     case "bloodthirst":
                         return new ConvergeSelector_Bloodthirst();
+                    case "triggerSubject":
+                        return new ConvergeSelector_TriggerSubject();
                     default:
                         throw new ArgumentException();
                 }
@@ -475,6 +517,8 @@ namespace SpaceConvergence
                         return new ConvergeSelector_Type(arrayTemplate);
                     case "control":
                         return new ConvergeSelector_Control(arrayTemplate);
+                    case "except":
+                        return new ConvergeSelector_Except(arrayTemplate);
                     case "battlefield":
                         return new ConvergeSelector_Battlefield(arrayTemplate);
                     case "zone":
@@ -563,6 +607,18 @@ namespace SpaceConvergence
         public override bool Test(ConvergeObject subject, ConvergeEffectContext context)
         {
             return context.subject == subject;
+        }
+    }
+
+    public class ConvergeSelector_TriggerSubject : ConvergeSelector
+    {
+        public override List<ConvergeObject> GetList(ConvergeEffectContext context)
+        {
+            return new List<ConvergeObject> { context.trigger.subject };
+        }
+        public override bool Test(ConvergeObject subject, ConvergeEffectContext context)
+        {
+            return context.trigger.subject == subject;
         }
     }
 
@@ -702,6 +758,20 @@ namespace SpaceConvergence
             }
 
             return false;
+        }
+    }
+
+    public class ConvergeSelector_Except : ConvergeSelector
+    {
+        ConvergeSelector excluded;
+
+        public ConvergeSelector_Except(JSONArray template)
+        {
+            excluded = ConvergeSelector.New(template.getProperty(1));
+        }
+        public override bool Test(ConvergeObject subject, ConvergeEffectContext context)
+        {
+            return !excluded.Test(subject, context);
         }
     }
 

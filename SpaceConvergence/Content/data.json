@@ -69,9 +69,19 @@
 		"condition":"bloodthirst",
 		"effect":["upgrade","source",2,2]
 	}]},
-	"spider":{"art":"spider", "cardType":["Unit"], "cost":"2G", "power":1, "toughness":2, "keywords":["Reach","Deathtouch"]
-	},
-	
+	"spider":{"art":"spider", "cardType":["Unit"], "cost":"2G", "power":1, "toughness":2, "keywords":["Reach","Deathtouch"]},
+
+	"elemental":{"art":"elemental", "cardType":["Unit"], "cost":"6RR", "power":6, "toughness":6,
+	"text":"On entering play, 4 damage to each other unit. You don't gain resources next turn.",
+	"triggered":[{
+		"trigger":"EnterPlay",
+		"triggerSubject":"source",
+		"effect":["sequence",
+			["damage","source",4,["battlefield", ["type","Unit"], ["except", "source"]]],
+			["skipMana", "you"]
+		]
+	}]},
+
 	"angel":{"art":"angel", "cardType":["Unit"], "cost":"CCCCCWW", "power":4, "toughness":4, "keywords":["Flying"]},
 	"lion":{"art":"lion", "cardType":["Unit"], "cost":"CW", "power":2, "toughness":1},
 	"cardinal":{"art":"cardinal", "cardType":["Unit"], "cost":"CCCW", "power":3, "toughness":2, "activated":[
@@ -151,6 +161,23 @@
 		}
 	]}
 	
+	"banner":{"art":"banner", "cardType":["Device"], "cost":"3RG",
+	"text":"Your units enter play untapped.",
+	"triggered":[{
+		"trigger":"EnterPlay",
+		"triggerSubject":["control", "you"],
+		"effect":["untap","triggerSubject"]
+	}],
+/*	"activated":[
+		{"icon":"icon_upgrade",
+		"frameColor":"AAAA44",
+		"altCost":["Sacrifice"],
+		"text":"SACRIFICE: Give a unit +2/+2 until your next turn.",
+		"target":["battlefield", ["type","Unit"]],
+		"effect":["upgrade", "target", 1, 1, [], "YourNextTurn"]
+		}]*/
+	}
+
 	"bomb":{"art":"bomb", "cardType":["Action"], "cost":"4W",
 		"text":"Kill a unit with power 4 or more.",
 		"target":["battlefield", ["type","Unit"], ["greaterOrEqual",["powerOf", "subject"], 4]],
@@ -201,7 +228,7 @@
 		]
 	},
 	
-	"muscle":{"art":"muscle", "cardType":["Augment"], "cost":"3R",
+	"arm":{"art":"arm", "cardType":["Augment"], "cost":"3R",
 		"target":["battlefield", ["type","Unit"]],
 		"text":"Implanted unit gains +2/+2 and can't block. When it dies, return this to your hand.",
 		"effect":["sequence",
@@ -209,7 +236,7 @@
 			["grantTriggered", "target", "Permanent", {
 				"trigger":"Discarded",
 				"triggerTarget":"source",
-				"effect":["spawn", "you", "muscle", "Hand"]
+				"effect":["spawn", "you", "arm", "Hand"]
 			}]
 		]
 	},
@@ -225,6 +252,14 @@
 			"target":["battlefield", ["control","opponent"], ["type","Unit"]],
 			"effect":["fight", "source", "target"]
 		}]
+	},
+
+	"beast_33":{"art":"beast", "cardType":["Unit"], "cost":"4G", "power":3, "toughness":3},
+	
+	"transform":{"art":"transform", "cardType":["Action"], "cost":"4G",
+		"target":["battlefield", ["type","Unit"]],
+		"text":"Replace a unit with a 3/3 beast.",
+		"effect":["sequence", ["spawn", "target", "beast_33"], ["sacrifice", "target"]]
 	},
 	
 	"candle":{"art":"candle", "cardType":["Action"], "cost":"CR",
@@ -340,7 +375,7 @@
 	
 	"yeti","yeti",
 	"baal",
-	// crater hellion
+	"elemental",
 	// crowned ceratok
 	"spider","spider",
 	"mammoth",
@@ -357,18 +392,18 @@
 	"fangs","fangs",
 	"dynamite",
 	// regrowth
-	// beast within
+	"transform",
 	// destructive revelry
 	"candle",
 	// terrifying presence
 	"fire", "fire",
 	"gnome",
-	// fires of yavimaya
+	"banner",
 	],
 	// "basilisk",
   "oppdeck": [
-	"armorer","armorer","armorer","armorer","armorer","armorer",//"armorer","armorer","armorer","armorer","armorer",
-	"pope","pope","pope","pope","pope","pope",//"pope","pope","pope",
+	"armorer","armorer","armorer","armorer","armorer","armorer","armorer","armorer",//"armorer","armorer","armorer",
+	"pope","pope","pope","pope","pope","pope","pope","pope",//"pope",
 	"frontiersman","frontiersman", // should be red/white
 	// new benalia?
 	"king",
@@ -401,7 +436,7 @@
 	"mutagen",
 	"drone",
 	// ordeal of purphoros?
-	"muscle",
+	"arm",
 	]
 //  "oppdeck": [ "pope", "pope", "pope", "pope", "pope", "pope", "lion", "angel", "lion", "cardinal" ]
 }

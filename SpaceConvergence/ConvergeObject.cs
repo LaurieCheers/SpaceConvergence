@@ -583,6 +583,9 @@ namespace SpaceConvergence
 
         public void DealDamage(ConvergeObject victim, int amount, bool isCombatDamage)
         {
+            if (amount <= 0)
+                return;
+
             if (TriggerSystem.HasTriggers(ConvergeTriggerType.DealDamage))
             {
                 TriggerSystem.CheckTriggers(ConvergeTriggerType.DealDamage, new TriggerData(controller, this, victim, amount));
@@ -593,9 +596,12 @@ namespace SpaceConvergence
             if (keywords.HasFlag(ConvergeKeyword.Lifelink))
                 controller.GainLife(amount);
         }
-
+        
         void TakeDamage(ConvergeObject source, int amount)
         {
+            if (amount <= 0)
+                return;
+
             if (cardType.HasFlag(ConvergeCardType.Home))
             {
                 controller.TakeDamage(amount);
@@ -829,11 +835,6 @@ namespace SpaceConvergence
             if (produces != null)
             {
                 controller.resources.Add(produces);
-            }
-
-            if (TriggerSystem.HasTriggers(ConvergeTriggerType.EnterPlay))
-            {
-                TriggerSystem.CheckTriggers(ConvergeTriggerType.EnterPlay, new TriggerData(controller, this, null, 0));
             }
         }
 
