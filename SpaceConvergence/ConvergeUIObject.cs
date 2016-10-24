@@ -37,7 +37,7 @@ namespace SpaceConvergence
         {
             abilityUIs.Clear();
             Vector2 offset = new Vector2(this.gfxFrame.Width / 2, 12);
-            foreach(ConvergeActivatedAbility ability in represented.activatedAbilities)
+            foreach (ConvergeActivatedAbility ability in represented.activatedAbilities)
             {
                 abilityUIs.Add(new ConvergeUIAbility(ability, offset, this));
                 offset.X += 32.0f;
@@ -107,7 +107,7 @@ namespace SpaceConvergence
                         {
                             represented.WithdrawAttack();
                         }
-                        else if(currentZone.zoneId == ConvergeZoneId.Hand && defenseZone.bounds.Contains(inputState.MousePos))
+                        else if (currentZone.zoneId == ConvergeZoneId.Hand && defenseZone.bounds.Contains(inputState.MousePos))
                         {
                             represented.Play(represented.controller);
                         }
@@ -137,9 +137,16 @@ namespace SpaceConvergence
                 }
             }
 
+            Vector2 offset = new Vector2(this.gfxFrame.Width / 2, 12);
+
             foreach(ConvergeUIAbility abilityUI in abilityUIs)
             {
-                abilityUI.Update(inputState);
+                if (abilityUI.isActive)
+                {
+                    abilityUI.offset = offset;
+                    abilityUI.Update(inputState);
+                    offset.X += 32.0f;
+                }
             }
         }
 
@@ -362,7 +369,7 @@ namespace SpaceConvergence
         ConvergeActivatedAbility ability;
         ConvergeUIObject parent;
         Rectangle frame;
-        Vector2 offset;
+        public Vector2 offset;
         Vector2 draggedTo;
 
         bool beamVisible;
@@ -374,6 +381,7 @@ namespace SpaceConvergence
         bool isMouseOver;
         bool isMousePressing;
         bool isDragging;
+        public bool isActive { get { return ability.isActive; } }
 
         public const int AbilityTooltipWidth = 200;
         public const int AbilityTooltipHeight = 45;
