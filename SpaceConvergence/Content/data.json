@@ -36,6 +36,7 @@
 	"farmer":{"art":"farmer", "cardType":["Resource"], "produces":"1G"},
 	"armorer":{"art":"armorer", "cardType":["Resource"], "produces":"1R"},
 	"pope":{"art":"pope", "cardType":["Resource"], "produces":"1W"},
+	"cardinal":{"art":"cardinal", "cardType":["Resource"], "produces":"1RW"},
 	"frontiersman":{"art":"frontiersman", "cardType":["Resource"], "produces":"1GR"},
 	"bear":{"art":"bear", "cardType":["Unit"], "cost":"2G", "power":2, "toughness":2, "keywords":["Trample"],
 	"text":"Whenever opponent gains life, put that many +1/+1 counters on this.",
@@ -84,9 +85,6 @@
 
 	"angel":{"art":"angel", "cardType":["Unit"], "cost":"CCCCCWW", "power":4, "toughness":4, "keywords":["Flying"]},
 	"lion":{"art":"lion", "cardType":["Unit"], "cost":"CW", "power":2, "toughness":1},
-	"cardinal":{"art":"cardinal", "cardType":["Unit"], "cost":"CCCW", "power":3, "toughness":2, "activated":[
-		{"icon":"icon_heal", "frameColor":"FFFF88", "altCost":["Tap"], "target":["battlefield", ["control","you"], ["type","Unit"]], "effect":["heal", 1, "target"]}
-	]},
 
 	"fox":{"art":"fox", "cardType":["Unit"], "cost":"CCR", "power":3, "toughness":1, "activated":[
 		{"icon":"icon_damage", "frameColor":"FF0000", "manaCost":"CCC", "target":["battlefield", ["control","opponent"], ["type","Unit"]], "effect":["damage", "source", 3, "target"]}
@@ -274,8 +272,8 @@
 	},
 	
 	"fire":{"art":"fire", "cardType":["Action"], "cost":"3R",
-		"text":"3 damage to a unit. Your upgraded units get an extra upgrade.",
-		"target":["battlefield", ["type","Unit"]],
+		"text":"3 damage, then your upgraded units get an extra upgrade.",
+		"target":["battlefield", ["type","Unit", "Home"]],
 		"effect":["sequence",
 			["damage", "source", 3, "target"],
 			["upgrade", ["battlefield", ["control","you"], "upgraded", ["type","Unit"]], 1, 1]
@@ -288,8 +286,8 @@
 			"icon":"icon_damage",
 			"frameColor":"FF0000",
 			"uses":4,
-			"text":"FOUR SHOTS: 1 damage to a unit.",
-			"target":["battlefield", ["control","opponent"], ["type","Unit"]],
+			"text":"FOUR SHOTS: 1 damage each.",
+			"target":["battlefield", ["control","opponent"], ["type","Unit", "Home"]],
 			"effect":["damage", "source", 1, "target"]
 		}]
 	},
@@ -342,7 +340,7 @@
 		"frameColor":"FF0000",
 		"altCost":["Tap"],
 		"text":"TAP: Deal 3 damage.",
-		"target":["battlefield", ["control","opponent"], ["type","Unit"]],
+		"target":["battlefield", ["control","opponent"], ["type","Unit", "Home"]],
 		"effect":["damage", "source", 3, "target"]
 		}
 	]},
@@ -367,8 +365,8 @@
 
   },
   "mydeck": [
-	"farmer", "farmer", "farmer", "farmer", "farmer", "farmer",// "farmer", "farmer", "farmer", "farmer", "farmer",
-	"armorer", "armorer","armorer","armorer","armorer","armorer",//"armorer","armorer","armorer","armorer",
+	"farmer", "farmer", "farmer", "farmer", "farmer", "farmer", "farmer", "farmer", //"farmer", "farmer", "farmer",
+	"armorer", "armorer","armorer","armorer","armorer","armorer","armorer","armorer",//"armorer","armorer",
 	"frontiersman", "frontiersman",
 	// llanowar reborn x2
 	// skarrg the rage pits
@@ -404,7 +402,7 @@
   "oppdeck": [
 	"armorer","armorer","armorer","armorer","armorer","armorer","armorer","armorer",//"armorer","armorer","armorer",
 	"pope","pope","pope","pope","pope","pope","pope","pope",//"pope",
-	"frontiersman","frontiersman", // should be red/white
+	"cardinal","cardinal", // should be red/white
 	// new benalia?
 	"king",
 	"ogre_guard","ogre_guard",
