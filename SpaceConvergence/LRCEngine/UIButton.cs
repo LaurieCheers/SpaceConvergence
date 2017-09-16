@@ -88,6 +88,7 @@ namespace LRCEngine
         public Texture2D icon;
         public Rectangle frame;
         public readonly UIButtonStyle styles;
+        List<OnPressDelegate> onPressActions;
         public OnPressDelegate onPress
         {
             get; protected set;
@@ -114,21 +115,23 @@ namespace LRCEngine
             );
         }
 
-        public UIButton(string label, Rectangle frame, UIButtonStyle styles, OnPressDelegate onPress)
+        public UIButton(string label, Rectangle frame, UIButtonStyle styles, OnPressDelegate onPress, List<OnPressDelegate> onPressActions = null)
         {
             this.label = label;
             this.frame = frame;
             this.styles = styles;
             this.onPress = onPress;
+            this.onPressActions = onPressActions;
         }
 
-        public UIButton(string label, Texture2D icon, Rectangle frame, UIButtonStyle styles, OnPressDelegate onPress)
+        public UIButton(string label, Texture2D icon, Rectangle frame, UIButtonStyle styles, OnPressDelegate onPress, List<OnPressDelegate> onPressActions = null)
         {
             this.label = label;
             this.icon = icon;
             this.frame = frame;
             this.styles = styles;
             this.onPress = onPress;
+            this.onPressActions = onPressActions;
         }
 
         public override UIMouseResponder GetMouseHover(Vector2 localMousePos)
@@ -163,8 +166,13 @@ namespace LRCEngine
 
         protected virtual void Pressed()
         {
-            if(onPress != null)
-                onPress();
+            if (onPress != null)
+            {
+                if (onPressActions != null)
+                    onPressActions.Add(onPress);
+                else
+                    onPress();
+            }
         }
 
         public override void Draw(SpriteBatch spriteBatch, Vector2 origin)

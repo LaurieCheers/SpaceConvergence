@@ -18,6 +18,7 @@ namespace SpaceConvergence
         JSONTable data;
         Dictionary<string, ConvergeCardSpec> allCards;
         public static UIContainer ui;
+        List<UIButton.OnPressDelegate> uiActions = new List<UIButton.OnPressDelegate>();
 
         public static List<KeyValuePair<ConvergeObject, ConvergeZone>> zoneChanges = new List<KeyValuePair<ConvergeObject, ConvergeZone>>();
 
@@ -130,8 +131,11 @@ namespace SpaceConvergence
             ui.Add(new ConvergeUIObject(opponent.homeBase));
 
             UIButtonStyle defaultStyle = UIButton.GetDefaultStyle(Content);
-            endTurnButton = new UIButton("End Turn", new Rectangle(600, 400, 80, 40), defaultStyle, EndTurn_onPress);
+            endTurnButton = new UIButton("End Turn", new Rectangle(600, 400, 80, 40), defaultStyle, EndTurn_action, uiActions);
             ui.Add(endTurnButton);
+
+            UIButton newHandButton = new UIButton("Cheat:New Hand", new Rectangle(600, 300, 80, 40), defaultStyle, NewHand_action, uiActions);
+            ui.Add(newHandButton);
 
             JSONTable allCardsTemplate = data.getJSON("cards");
             foreach (string cardName in allCardsTemplate.Keys)
@@ -156,6 +160,7 @@ namespace SpaceConvergence
                 //ui.Add(new ConvergeUIObject(handCard));
             }
 
+
             UpdateZoneChanges();
 
             self.BeginGame();
@@ -166,12 +171,7 @@ namespace SpaceConvergence
             opponent.numLandsPlayed = 1; // can't play a land in your first response phase
         }
 
-        public void EndTurn_onPress()
-        {
-            endTurnPressed = true;
-        }
-
-        public void EndTurn_startTimer()
+        public void EndTurn_action()
         {
             activePlayer.SufferWounds();
             UpdateZoneChanges();
@@ -194,6 +194,17 @@ namespace SpaceConvergence
             }
 
             endTurnButton.visible = true;
+        }
+
+        public void NewHand_action()
+        {
+            for(int Idx = 0; Idx < activePlayer.hand.contents.Count; ++Idx)
+            {
+                activePlayer.hand.contents[Idx].MoveZone(activePlayer.laboratory);
+            }
+            UpdateZoneChanges();
+            activePlayer.laboratory.Shuffle();
+            activePlayer.DrawCards(5);
         }
 
         /// <summary>
@@ -221,10 +232,11 @@ namespace SpaceConvergence
             UpdateZoneChanges();
             ui.Update(inputState);
 
-            if(endTurnPressed)
+            while(uiActions.Count > 0)
             {
-                EndTurn_startTimer();
-                endTurnPressed = false;
+                UIButton.OnPressDelegate action = uiActions[0];
+                uiActions.RemoveAt(0);
+                action();
             }
 
             if (ticking)

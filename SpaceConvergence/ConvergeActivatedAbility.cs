@@ -20,6 +20,7 @@ namespace SpaceConvergence
         public readonly ConvergeManaAmount manacost;
         public readonly ConvergeAltCost altCost;
         public readonly ConvergeCommand effect;
+        public readonly ConvergeCommand attackEffect;
         public readonly ConvergeSelector target;
         public readonly ConvergeZoneId activeZones;
         public readonly int uses;
@@ -32,6 +33,9 @@ namespace SpaceConvergence
             textHeight = (int)Game1.font.MeasureString(text).Y;
             effect = ConvergeCommand.New(template.getArray("effect"), Content);
             frameColor = template.getString("frameColor", "FFFFFF").toColor();
+
+            if (template.hasKey("attackEffect"))
+                attackEffect = ConvergeCommand.New(template.getArray("attackEffect"), Content);
 
             if (template.hasKey("target"))
                 target = ConvergeSelector.New(template.getProperty("target"));
@@ -73,6 +77,7 @@ namespace SpaceConvergence
         public int textHeight { get { return spec.textHeight; } }
         public ConvergeManaAmount manacost { get { return spec.manacost; } }
         ConvergeCommand effect { get { return spec.effect; } }
+        ConvergeCommand attackEffect { get { return spec.attackEffect; } }
         ConvergeZoneId activeZones { get { return spec.activeZones; } }
         ConvergeAltCost altCost { get { return spec.altCost; } }
         public bool hasTarget { get { return spec.target != null; } }
@@ -114,7 +119,7 @@ namespace SpaceConvergence
 
         public bool CanTarget(ConvergeObject target, ConvergePlayer you)
         {
-            ConvergeEffectContext context = new ConvergeEffectContext(source, you);
+            ConvergeEffectContext context = new ConvergeEffectContext(source, you, this);
             return spec.target.Test(target, context);
         }
 
@@ -137,7 +142,7 @@ namespace SpaceConvergence
             if (you.TryPayCost(manacost) && source.TryPayAltCost(altCost))
             {
                 timesUsed++;
-                ConvergeEffectContext context = new ConvergeEffectContext(source, you);
+                ConvergeEffectContext context = new ConvergeEffectContext(source, you, this);
                 effect.Run(context);
             }
         }
@@ -153,7 +158,7 @@ namespace SpaceConvergence
             if (you.TryPayCost(manacost) && source.TryPayAltCost(altCost))
             {
                 timesUsed++;
-                ConvergeEffectContext context = new ConvergeEffectContext(source, you);
+                ConvergeEffectContext context = new ConvergeEffectContext(source, you, this);
                 context.target = target;
                 effect.Run(context);
             }
@@ -162,6 +167,16 @@ namespace SpaceConvergence
         public void OnEnteringPlay()
         {
             timesUsed = 0;
+        }
+
+        public void DoAttackEffect(ConvergeObject target, ConvergePlayer you)
+        {
+            if (!CanTarget(target, you))
+                return;
+
+            ConvergeEffectContext context = new ConvergeEffectContext(source, you, this);
+            context.target = target;
+            attackEffect.Run(context);
         }
     }
 }

@@ -330,6 +330,8 @@ namespace SpaceConvergence
         public int damage;
         public bool destroyed;
         public bool tapped;
+        public ConvergeActivatedAbility attackingWithAbility;
+        public ConvergeObject attackVictim;
         public List<ConvergeActivatedAbility> activatedAbilities;
         public List<ConvergeTriggeredAbility> triggeredAbilities;
         List<ConvergeActivatedAbility> originalActivatedAbilities;
@@ -548,6 +550,14 @@ namespace SpaceConvergence
                     }
                 }
             }
+            else if (zone.zoneId == ConvergeZoneId.Attack)
+            {
+                WithdrawAttack();
+            }
+            else if(zone.zoneId == ConvergeZoneId.Defense)
+            {
+                EnterAttack();
+            }
         }
 
         public bool CanTarget(ConvergeObject target, ConvergePlayer you)
@@ -674,24 +684,46 @@ namespace SpaceConvergence
                 MoveZone(controller.attack);
         }
 
+        public void EnterAttackWithAbility(ConvergeActivatedAbility ability, ConvergeObject target)
+        {
+            if (zone.zoneId == ConvergeZoneId.Defense)
+            {
+                MoveZone(controller.attack);
+                attackingWithAbility = ability;
+                attackVictim = target;
+            }
+        }
+
         public void WithdrawAttack()
         {
             if (zone.zoneId == ConvergeZoneId.Attack && cardType.HasFlag(ConvergeCardType.Unit))
             {
                 MoveZone(controller.defense);
                 tapped = true;
+                attackingWithAbility = null;
+                attackVictim = null;
             }
         }
 
         public void BeginMyTurn()
         {
-            if (zone.zoneId == ConvergeZoneId.Attack && !tapped && !dying)
+            if (zone.zoneId == ConvergeZoneId.Attack && !dying)
             {
-                DealDamage(controller.opponent.homeBase, effectivePower, true);
-
-                if(keywords.HasFlag(ConvergeKeyword.DoubleStrike))
+                if (attackingWithAbility != null)
+                {
+                    MoveZone(controller.defense);
+                    attackingWithAbility.DoAttackEffect(attackVictim, controller);
+                    attackingWithAbility = null;
+                    attackVictim = null;
+                }
+                else if(!tapped)
                 {
                     DealDamage(controller.opponent.homeBase, effectivePower, true);
+
+                    if (keywords.HasFlag(ConvergeKeyword.DoubleStrike))
+                    {
+                        DealDamage(controller.opponent.homeBase, effectivePower, true);
+                    }
                 }
             }
             

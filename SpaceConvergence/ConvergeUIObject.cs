@@ -182,14 +182,25 @@ namespace SpaceConvergence
 
             // attack beam
             if(represented.zone.zoneId == ConvergeZoneId.Attack &&
-                !represented.tapped &&
-                represented.effectivePower > 0 &&
                 !represented.dying &&
-                ((represented.controller == Game1.activePlayer) == (Game1.countdown > 0)))
+                (
+                 (!represented.tapped && represented.effectivePower > 0 && ((represented.controller == Game1.activePlayer) == (Game1.countdown > 0)))
+                  || represented.attackVictim != null
+                )
+              )
             {
-                Rectangle targetFrame = represented.controller.opponent.homeBase.ui.gfxFrame;
+                Rectangle targetFrame;
+
+                if (represented.attackVictim != null)
+                {
+                    targetFrame = represented.attackVictim.ui.gfxFrame;
+                }
+                else 
+                {
+                    targetFrame = represented.controller.opponent.homeBase.ui.gfxFrame;
+                }
                 int thickness = Game1.countdown == 0? 16: 16 + (120 - Game1.countdown)/6;
-                spriteBatch.DrawBeam(Game1.attackBeam, new Vector2(gfxFrame.Center.X, gfxFrame.Bottom), new Vector2(targetFrame.Center.X, targetFrame.Bottom-5), thickness, Color.White);
+                spriteBatch.DrawBeam(Game1.attackBeam, new Vector2(gfxFrame.Center.X, gfxFrame.Bottom), new Vector2(targetFrame.Center.X, targetFrame.Bottom - 5), thickness, Color.White);
             }
 
             Texture2D art = represented.art;

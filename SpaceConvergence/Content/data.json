@@ -341,7 +341,8 @@
 		"altCost":["Tap"],
 		"text":"TAP: Deal 3 damage.",
 		"target":["battlefield", ["control","opponent"], ["type","Unit", "Home"]],
-		"effect":["damage", "source", 3, "target"]
+		"effect":["attackAbility"],
+		"attackEffect":["damage", "source", 3, "target"]
 		}
 	]},
 	"ringmaster":{"art":"ringmaster", "cardType":["Unit"], "cost":"2WR", "power":1, "toughness":1, "activated":[
@@ -349,7 +350,7 @@
 		"frameColor":"FF0000",
 		"manaCost":"1",
 		"altCost":["Tap"],
-		"text":"TAP: Deal 1 damage and make an attacker retreat.",
+		"text":"TAP: Deal 1 damage to a unit. If it's attacking, it retreats.",
 		"target":["battlefield", ["control","opponent"], ["type","Unit"]],
 		"effect":["sequence", ["damage", "source", 1, "target"], ["retreat", "target"]]
 		}

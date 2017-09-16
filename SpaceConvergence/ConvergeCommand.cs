@@ -16,11 +16,19 @@ namespace SpaceConvergence
         public ConvergeObject subject;
         public ConvergePlayer you;
         public TriggerData trigger;
+        public ConvergeActivatedAbility ability;
 
         public ConvergeEffectContext(ConvergeObject source, ConvergePlayer you)
         {
             this.source = source;
             this.you = you;
+        }
+
+        public ConvergeEffectContext(ConvergeObject source, ConvergePlayer you, ConvergeActivatedAbility ability)
+        {
+            this.source = source;
+            this.you = you;
+            this.ability = ability;
         }
     }
 
@@ -66,6 +74,8 @@ namespace SpaceConvergence
                     return new ConvergeCommand_Spawn(template, Content);
                 case "sequence":
                     return new ConvergeCommand_Sequence(template, Content);
+                case "attackAbility":
+                    return new ConvergeCommand_AttackAbility(template, Content);
                 default:
                     throw new ArgumentException();
             }
@@ -453,6 +463,18 @@ namespace SpaceConvergence
             {
                 command.Run(context);
             }
+        }
+    }
+
+    public class ConvergeCommand_AttackAbility: ConvergeCommand
+    {
+        public ConvergeCommand_AttackAbility(JSONArray template, ContentManager Content)
+        {
+        }
+
+        public override void Run(ConvergeEffectContext context)
+        {
+            context.source.EnterAttackWithAbility(context.ability, context.target);
         }
     }
 
